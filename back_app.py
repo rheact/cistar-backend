@@ -3,6 +3,7 @@ import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pdfparser import parse
+from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = '/home/samk/Projects/cistar-backend'
 
@@ -30,10 +31,17 @@ def p():
 	if not is_pdf(file.filename):
 		return("Not a PDF file")
 	
-	a = parse(f_name)
+	
+	# save pdf file locally
+	path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+	file.save(path)
 
-	print(a)
-	return jsonify({'a':a})
+	# parse local pdf file
+	a = parse(path)
+
+	# delete local file
+	os.remove(path)
+	return jsonify({'a': a})
 	
 
 def is_pdf(filename):

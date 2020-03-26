@@ -186,13 +186,14 @@ def parse(f):
     pnm = re.search(r"1\.1.+1\.2  Releva",t,re.DOTALL).group() #for product name
     cprop = re.search(r"3\.1.+4\. FIRST",t,re.DOTALL).group() #for maol. wt and CAS number
     stb = re.search(r"10\. STABILITY.+11\. T",t,re.DOTALL).group() #for stability
-    a = [0]*23
+    a = ['']*23
     a[0] = pname(pnm)
     a[1],a[2] = comp(cprop)
     v = phy_chem(p)
     for i in range(3,23):
         a[i] = v[i-3]
     
+    #print(*a, sep="\n")
     # format output to remove units
     mol_wt = a[1]
     a[1] = re.search(r"\d+\.\d+", mol_wt).group() # molecular weight
@@ -218,8 +219,9 @@ def parse(f):
     auto_ignition_temp = a[18]
     a[18] = re.search(r"\d+", str(auto_ignition_temp)).group() # auto-ignition temperature
     
-    print(*a, sep="\n")
-    #return a
+    #print(*a, sep="\n")
+    return a
+
     
 
 # print('\n')
