@@ -1,8 +1,14 @@
 #!flask/bin/python
-from flask import Flask, jsonify
+import os
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 from pdfparser import parse
 
+UPLOAD_FOLDER = '/home/samk/Projects/cistar-backend'
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+CORS(app)
 
 @app.route('/')
 def index():
@@ -15,13 +21,23 @@ def get_task(task_id):
 
 	return jsonify({'a':a})
 
-
-@app.route('/pdf/<path:f_name>', methods=['GET'])
-def p(f_name):
+@app.route('/pdf', methods=['POST'])
+def p():
+	if 'file' not in request.files:
+		return jsonify("No file found")
+	
+	file = request.files['file']
+	if not is_pdf(file.filename):
+		return("Not a PDF file")
 	
 	a = parse(f_name)
 
+	print(a)
 	return jsonify({'a':a})
+	
+
+def is_pdf(filename):
+	return '.' in filename and filename.split('.', 1)[1].lower() == 'pdf'
 
 if __name__ == '__main__':
     app.run()
