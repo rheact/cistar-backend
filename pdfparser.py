@@ -193,7 +193,6 @@ def parse(f):
     for i in range(3,23):
         a[i] = v[i-3]
     
-    #print(*a, sep="\n")
     # format output to remove units
     mol_wt = a[1]
     a[1] = re.search(r"\d+\.\d+", mol_wt).group() # molecular weight
@@ -219,8 +218,37 @@ def parse(f):
     auto_ignition_temp = a[18]
     a[18] = re.search(r"\d+", str(auto_ignition_temp)).group() # auto-ignition temperature
     
-    #print(*a, sep="\n")
-    return a
+    print(*a, sep="\n")
+    return convert_arr_to_dict(a)
+
+# a: array of properties
+# @return dict: dictionary of property name : value
+def convert_arr_to_dict(a):
+    dict = {}
+    dict['product_name'] = a[0]
+    dict['mol_wt'] = a[1]
+    dict['cas_no'] = a[2]
+    dict['appearance'] = a[3]
+    dict['odour'] = a[4]
+    dict['odour_threshold'] = a[5]
+    dict['ph'] = a[6]
+    dict['melting_pt'] = a[7]
+    dict['boiling_pt'] = a[8]
+    dict['flash_pt'] = a[9]
+    dict['evaporation_rate'] = a[10]
+    dict['flammability'] = a[11]
+    dict['flammability_limits'] = a[12]
+    dict['vapour_pressure'] = a[13]
+    dict['vapour_density'] = a[14]
+    dict['rel_density'] = a[15]
+    dict['water_solubility'] = a[16]
+    dict['partition_coeff'] = a[17]
+    dict['auto_iginition_temp'] = a[19]
+    dict['decomposition_temp'] = a[20]
+    dict['viscosity'] = a[21]
+    dict['explosive_properties'] = a[22]
+    dict['oxidizing_propersties'] = a[23]
+    return dict
 
     
 

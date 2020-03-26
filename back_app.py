@@ -37,11 +37,11 @@ def p():
 	file.save(path)
 
 	# parse local pdf file
-	a = parse(path)
+	properties = parse(path)
 
 	# delete local file
 	os.remove(path)
-	return jsonify({'a': a})
+	return jsonify(properties)
 	
 
 def is_pdf(filename):
