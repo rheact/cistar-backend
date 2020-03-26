@@ -38,9 +38,6 @@ def convert_pdf(path, format='text', codec='utf-8', password=''):
     return text
 
 
-# In[ ]:
-
-
 def phy_chem(l):
     #print('PHYSICAL AND CHEMICAL PROPERTIES')
 
@@ -225,29 +222,28 @@ def parse(f):
 # @return dict: dictionary of property name : value
 def convert_arr_to_dict(a):
     dict = {}
-    dict['product_name'] = a[0]
-    dict['mol_wt'] = a[1]
-    dict['cas_no'] = a[2]
+    dict['productName'] = a[0]
+    dict['molWt'] = a[1]
+    dict['casNo'] = a[2]
     dict['appearance'] = a[3]
     dict['odour'] = a[4]
-    dict['odour_threshold'] = a[5]
+    dict['odourThreshold'] = a[5]
     dict['ph'] = a[6]
-    dict['melting_pt'] = a[7]
-    dict['boiling_pt'] = a[8]
-    dict['flash_pt'] = a[9]
-    dict['evaporation_rate'] = a[10]
+    dict['meltingPt'] = a[7]
+    dict['boilingPt'] = a[8]
+    dict['flashPt'] = a[9]
+    dict['evaporationRate'] = a[10]
     dict['flammability'] = a[11]
-    dict['flammability_limits'] = a[12]
-    dict['vapour_pressure'] = a[13]
-    dict['vapour_density'] = a[14]
-    dict['rel_density'] = a[15]
-    dict['water_solubility'] = a[16]
-    dict['partition_coeff'] = a[17]
-    dict['auto_iginition_temp'] = a[19]
-    dict['decomposition_temp'] = a[20]
+    dict['flammabilityLimits'] = a[12]
+    dict['vapourPressure'] = a[13]
+    dict['vapourDensity'] = a[14]
+    dict['relDensity'] = a[15]
+    dict['waterSolubility'] = a[16]
+    dict['partitionCoeff'] = a[17]
+    dict['autoIgnitionTemp'] = a[19]
+    dict['decompositionTemp'] = a[20]
     dict['viscosity'] = a[21]
-    dict['explosive_properties'] = a[22]
-    dict['oxidizing_propersties'] = a[23]
+    dict['explosiveProperties'] = a[22]
     return dict
 
     
