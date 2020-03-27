@@ -93,16 +93,12 @@ def phy_chem(l):
     return v
 
 
-# In[ ]:
-
-
 def hindex(l):
-    print('H-NUMBERS:')
     try:
         h = re.findall(r'\bH\w{3}\b',l)
-        print(h)
     except:
         h = []
+    return h
         
 def pname(l):
     a = re.search(r"CAS-No\. .+ \d",l,re.DOTALL).group()
@@ -172,13 +168,12 @@ def stability(l):
     return v 
 
 
-# In[ ]:
-
-
 #f =file()
 def parse(f):
     t = convert_pdf(f,'text')
     hid = re.search(r"2\.1.+2.2  GHS",t,re.DOTALL).group() #for h index
+    hNumbers = hindex(hid)
+
     p = re.search(r"9\. PHYSICAL AND.+9\.2",t,re.DOTALL).group() #for physical and chemical properties
     pnm = re.search(r"1\.1.+1\.2  Releva",t,re.DOTALL).group() #for product name
     cprop = re.search(r"3\.1.+4\. FIRST",t,re.DOTALL).group() #for maol. wt and CAS number
@@ -215,8 +210,9 @@ def parse(f):
     auto_ignition_temp = a[18]
     a[18] = re.search(r"\d+", str(auto_ignition_temp)).group() # auto-ignition temperature
     
-    print(*a, sep="\n")
-    return convert_arr_to_dict(a)
+    properties = convert_arr_to_dict(a)
+    properties['hNumbers'] = hNumbers
+    return properties
 
 # a: array of properties
 # @return dict: dictionary of property name : value
