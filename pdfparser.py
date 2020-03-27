@@ -1,8 +1,6 @@
 
 # coding: utf-8
 
-# In[ ]:
-
 
 import re
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
@@ -93,12 +91,14 @@ def phy_chem(l):
     return v
 
 
-def hindex(l):
+def get_h_numbers(text):
+    # Section 2 - hazard info
+    hazard_info = re.search(r"2\.1.+2.2  GHS",text,re.DOTALL).group() #for h index
     try:
-        h = re.findall(r'\bH\w{3}\b',l)
+        h_numbers = re.findall(r'\bH\w{3}\b', hazard_info)
     except:
-        h = []
-    return h
+        h_numbers = []
+    return h_numbers
         
 def pname(l):
     a = re.search(r"CAS-No\. .+ \d",l,re.DOTALL).group()
@@ -170,14 +170,14 @@ def stability(l):
 
 #f =file()
 def parse(f):
-    t = convert_pdf(f,'text')
-    hid = re.search(r"2\.1.+2.2  GHS",t,re.DOTALL).group() #for h index
-    hNumbers = hindex(hid)
+    text = convert_pdf(f,'text')
+    
+    h_numbers = get_h_numbers(text)
 
-    p = re.search(r"9\. PHYSICAL AND.+9\.2",t,re.DOTALL).group() #for physical and chemical properties
-    pnm = re.search(r"1\.1.+1\.2  Releva",t,re.DOTALL).group() #for product name
-    cprop = re.search(r"3\.1.+4\. FIRST",t,re.DOTALL).group() #for maol. wt and CAS number
-    stb = re.search(r"10\. STABILITY.+11\. T",t,re.DOTALL).group() #for stability
+    p = re.search(r"9\. PHYSICAL AND.+9\.2",text,re.DOTALL).group() #for physical and chemical properties
+    pnm = re.search(r"1\.1.+1\.2  Releva",text,re.DOTALL).group() #for product name
+    cprop = re.search(r"3\.1.+4\. FIRST",text,re.DOTALL).group() #for maol. wt and CAS number
+    stb = re.search(r"10\. STABILITY.+11\. T",text,re.DOTALL).group() #for stability
     a = ['']*23
     a[0] = pname(pnm)
     a[1],a[2] = comp(cprop)
@@ -190,6 +190,7 @@ def parse(f):
     a[1] = re.search(r"\d+\.\d+", mol_wt).group() # molecular weight
 
     melting_pt = a[7]
+    print(melting_pt, type(melting_pt))
     a[7] = re.search(r"\d+ - \d+", melting_pt).group() # melting point
 
     boiling_pt = a[8]
@@ -211,7 +212,7 @@ def parse(f):
     a[18] = re.search(r"\d+", str(auto_ignition_temp)).group() # auto-ignition temperature
     
     properties = convert_arr_to_dict(a)
-    properties['hNumbers'] = hNumbers
+    properties['hNumbers'] = h_numbers
     return properties
 
 # a: array of properties
