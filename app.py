@@ -11,7 +11,7 @@ UPLOAD_FOLDER = os.getcwd()
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}))
 
 @app.route('/')
 def index():
@@ -25,7 +25,6 @@ def get_task(task_id):
 	return jsonify({'a':a})
 
 @app.route('/pdf', methods=['POST'])
-@cross_origin()
 def p():
 	return jsonify('hi :)')
 	if 'file' not in request.files:
