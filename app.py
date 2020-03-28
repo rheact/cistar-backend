@@ -25,6 +25,7 @@ def get_task(task_id):
 	return jsonify({'a':a})
 
 @app.route('/pdf', methods=['POST'])
+@cross_origin()
 def p():
 	return jsonify('hi :)')
 	if 'file' not in request.files:
