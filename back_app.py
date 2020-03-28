@@ -7,7 +7,7 @@ from hmatrix import max_h_plot
 from werkzeug.utils import secure_filename
 import json
 
-UPLOAD_FOLDER = '/home/samk/Projects/cistar-backend'
+UPLOAD_FOLDER = os.getcwd()
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
