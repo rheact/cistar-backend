@@ -19,7 +19,7 @@ def parse(f):
     product_name = pname(text)
     cas_num, weight = num_weight(text)
     
-    properties_list = [product_name] + [cas_num] + [weight] + phys_chem_properties
+    properties_list = [product_name]  + [weight] + [cas_num] + phys_chem_properties
 
     properties = convert_arr_to_dict(properties_list)
     properties['hNumbers'] = h_numbers
@@ -47,7 +47,7 @@ def convert_arr_to_dict(a):
 def get_physical_chemical_properties(text):
     #idx = ['Appearance','Odour','Odour Threshold','pH','Melting point','Initial boiling point','Flash point','Evaporation rate','Flammability','Explosive limits','Vapour pressure','Vapour density','Relative density','Water solubility','Partition coefficient','Auto-ignition temperature','Decomposition temperature','Viscosity','Explosive properties','Oxidizing properties']
     # Section 9 - Physical and Chemical Properties
-    phys_chem = re.search(r"9\. PHYSICAL AND.+9\.2", text,re.DOTALL).group() 
+    phys_chem = re.search(r"PHYSICAL AND.+9\.2", text, re.DOTALL|re.IGNORECASE).group() 
     p = re.split(r'\n', phys_chem)
     letters = ['d', 'f', 'g', 'j', 'k', 'l', 'm', 'p', 'q', 'r']
     idx = ['pH ',
@@ -122,7 +122,7 @@ def pname(text):
 # CAS # and molecular weight
 def num_weight(text):
     # Section 3 - composition/information on ingredients
-    cprop = re.search(r"3\.1.+4\. FIRST", text, re.DOTALL).group() #for maol. wt and CAS number
+    cprop = re.search(r"3\.1.+FIRST", text, re.DOTALL|re.IGNORECASE).group() #for maol. wt and CAS number
     
     num = re.search(r"\d+\s-\s\d{2}\s-\s\d", cprop, re.DOTALL).group()
     # remove newlines
