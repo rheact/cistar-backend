@@ -26,6 +26,7 @@ def get_task(task_id):
 
 @app.route('/pdf', methods=['POST'])
 def p():
+	return jsonify('hi :)')
 	if 'file' not in request.files:
 		return jsonify("No file found")
 	
