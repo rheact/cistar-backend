@@ -11,7 +11,7 @@ UPLOAD_FOLDER = os.getcwd()
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-CORS(app, resources={r"/*": {"origins": "*"}}))
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/')
 def index():
