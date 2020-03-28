@@ -122,7 +122,7 @@ def pname(text):
 # CAS # and molecular weight
 def num_weight(text):
     # Section 3 - composition/information on ingredients
-    cprop = re.search(r"3\.1.+FIRST", text, re.DOTALL|re.IGNORECASE).group() #for maol. wt and CAS number
+    cprop = re.search(r"COMPOSITION.+FIRST", text, re.DOTALL|re.IGNORECASE).group() #for maol. wt and CAS number
     
     num = re.search(r"\d+\s-\s\d{2}\s-\s\d", cprop, re.DOTALL).group()
     # remove newlines
