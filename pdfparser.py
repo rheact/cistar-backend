@@ -1,19 +1,16 @@
 
 import re
-import PyPDF2
+import pdftotext
 
 def parse(f):
     text = ''
     pdfFileObject = open(f, 'rb')
-
-    pdfReader = PyPDF2.PdfFileReader(pdfFileObject)
-
-    for i in range(pdfReader.numPages):
-        pageObject = pdfReader.getPage(i)
-        text += pageObject.extractText()
+    pdf = pdftotext.PDF(pdfFileObject)
+    for page in pdf:
+        text += page
         
     pdfFileObject.close()
-    
+
     h_numbers = get_h_numbers(text)
     phys_chem_properties = get_physical_chemical_properties(text)
     product_name = pname(text)
@@ -124,10 +121,12 @@ def get_h_numbers(text):
 def pname(text):
     # section 1.1 - Product name
     pnm = re.search(r"1\.1.+1\.2\s*Releva", text, re.DOTALL).group()
-    
     a = re.search(r"Product name\s*:.+Product Number",pnm,re.DOTALL).group()
-    # remove "Prodct Name : " and "Product Number"
+    # remove "Product Name : " and "Product Number"
     a = a.replace('\n', '')
+    
+    # remove extraneous spaces
+    a = " ".join(a.split())
     
     b = a.replace('Product name : ', '')
     b = b.replace('Product Number', '')
@@ -138,8 +137,8 @@ def pname(text):
 def num_weight(text):
     # Section 3 - composition/information on ingredients
     cprop = re.search(r"COMPOSITION.+FIRST", text, re.DOTALL|re.IGNORECASE).group() #for maol. wt and CAS number
-    
-    num = re.search(r"\d+\s-\s\d{2}\s-\s\d", cprop, re.DOTALL).group()
+
+    num = re.search(r"\d+-\d{2}-\d", cprop, re.DOTALL).group()
     # remove newlines
     num = num.replace('\n', '')
 

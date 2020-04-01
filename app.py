@@ -5,6 +5,7 @@ from flask_cors import CORS
 from pdfparser import parse
 from hmatrix import max_h_plot
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import BadRequest
 import json
 
 UPLOAD_FOLDER = os.getcwd()
@@ -27,23 +28,25 @@ def get_task(task_id):
 @app.route('/pdf', methods=['POST'])
 def p():
 	if 'file' not in request.files:
-		return jsonify("No file found")
+		raise BadRequest('No file found')
 	
 	file = request.files['file']
 	if not is_pdf(file.filename):
-		return("Not a PDF file")
-	
+		raise BadRequest('Not a PDF file')
 	
 	# save pdf file locally
 	path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
 	file.save(path)
 
 	# parse local pdf file
-	properties = parse(path)
-
-	# delete local file
-	os.remove(path)
-	return jsonify(properties)
+	try:
+		properties = parse(path)
+		# delete local file
+		os.remove(path)
+		return jsonify(properties
+	except:
+		raise BadRequest('Error parsing file. Please try again')
+	
 
 @app.route('/graph', methods=['POST'])
 def matrix():
