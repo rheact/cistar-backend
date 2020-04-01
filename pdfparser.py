@@ -101,8 +101,8 @@ def get_h_numbers(text):
     # Section 2 - hazard info
     hazard_info = re.search(r"2\.1.+2\.2\s*GHS",text,re.DOTALL).group() #for h index
     try:
-        # gonna be a lit of dictionaries of h_number : h_statement pairs
-        return_array = []
+        # gonna be a dictionary of h_number : h_statement pairs
+        return_dict = {}
         # just get h-statements
         osha_hcs = '(OSHA HCS)'
         hazard_info = hazard_info[hazard_info.find(osha_hcs) + len(osha_hcs):]
@@ -116,10 +116,10 @@ def get_h_numbers(text):
             last_comma = h_num.rfind(',')
             num = h_num[last_comma + 2:]
             h_statement = h_num[:last_comma]
-            return_array.append({ num: h_statement })
+            return_dict[num] =  h_statement
     except:
-        return_array = []
-    return return_array
+        return_dict = {}
+    return return_dict
         
 def pname(text):
     # section 1.1 - Product name
