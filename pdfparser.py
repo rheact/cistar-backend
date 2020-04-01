@@ -101,10 +101,25 @@ def get_h_numbers(text):
     # Section 2 - hazard info
     hazard_info = re.search(r"2\.1.+2\.2\s*GHS",text,re.DOTALL).group() #for h index
     try:
-        h_numbers = re.findall(r'\bH\w{3}\b', hazard_info)
+        # gonna be a lit of dictionaries of h_number : h_statement pairs
+        return_array = []
+        # just get h-statements
+        osha_hcs = '(OSHA HCS)'
+        hazard_info = hazard_info[hazard_info.find(osha_hcs) + len(osha_hcs):]
+        # remove new lines
+        hazard_info = hazard_info.replace('\n', '')
+        # remove extraneous spaces
+        hazard_info = " ".join(hazard_info.split())
+        # find all lines of the form [H-STATEMENT], [HXXX]
+        h_numbers = re.findall(r'\w.*?,\s*H\d{3}', hazard_info, re.DOTALL)
+        for h_num in h_numbers:
+            last_comma = h_num.rfind(',')
+            num = h_num[last_comma + 2:]
+            h_statement = h_num[:last_comma]
+            return_array.append({ num: h_statement })
     except:
-        h_numbers = []
-    return h_numbers
+        return_array = []
+    return return_array
         
 def pname(text):
     # section 1.1 - Product name
