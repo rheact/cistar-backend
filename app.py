@@ -38,14 +38,15 @@ def p():
 	path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
 	file.save(path)
 
-	# parse local pdf file
 	try:
+		# parse local pdf file
 		properties = parse(path)
-		# delete local file
-		os.remove(path)
-		return jsonify(properties
+		return jsonify(properties)
 	except:
 		raise BadRequest('Error parsing file. Please try again')
+	finally:
+		# delete local file
+		os.remove(path)
 	
 
 @app.route('/graph', methods=['POST'])
