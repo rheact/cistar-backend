@@ -196,4 +196,5 @@ def stability(l):
     # for x,y in zip(idx,v):
     #     print(x+':')
     #     print(y+'\n')
+    ###
     return v 
