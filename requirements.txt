@@ -5,3 +5,4 @@ pandas==1.0.3
 requests==2.18.4
 Werkzeug==1.0.0
 pdftotext==2.1.4
+xlrd==1.2.0
