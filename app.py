@@ -1,6 +1,6 @@
 #!flask/bin/python
 import os
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pdfparser import parse
 from hmatrix import max_h_plot
