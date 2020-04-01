@@ -157,7 +157,8 @@ def stability(l):
 
     j = 1
     k = 2
-
+    j += 1
+    k += 1
     for i in range(0,6):
         try:
             if i==4:
