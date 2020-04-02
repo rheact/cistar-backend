@@ -1,19 +1,16 @@
 
 import re
-import PyPDF2
+import pdftotext
 
 def parse(f):
     text = ''
     pdfFileObject = open(f, 'rb')
-
-    pdfReader = PyPDF2.PdfFileReader(pdfFileObject)
-
-    for i in range(pdfReader.numPages):
-        pageObject = pdfReader.getPage(i)
-        text += pageObject.extractText()
+    pdf = pdftotext.PDF(pdfFileObject)
+    for page in pdf:
+        text += page
         
     pdfFileObject.close()
-    
+
     h_numbers = get_h_numbers(text)
     phys_chem_properties = get_physical_chemical_properties(text)
     product_name = pname(text)
@@ -101,18 +98,35 @@ def get_h_numbers(text):
     # Section 2 - hazard info
     hazard_info = re.search(r"2\.1.+2\.2\s*GHS",text,re.DOTALL).group() #for h index
     try:
-        h_numbers = re.findall(r'\bH\w{3}\b', hazard_info)
+        # gonna be a dictionary of h_number : h_statement pairs
+        return_dict = {}
+        # just get h-statements
+        osha_hcs = '(OSHA HCS)'
+        hazard_info = hazard_info[hazard_info.find(osha_hcs) + len(osha_hcs):]
+        # remove new lines
+        hazard_info = hazard_info.replace('\n', '')
+        # remove extraneous spaces
+        hazard_info = " ".join(hazard_info.split())
+        # find all lines of the form [H-STATEMENT], [HXXX]
+        h_numbers = re.findall(r'\w.*?,\s*H\d{3}', hazard_info, re.DOTALL)
+        for h_num in h_numbers:
+            last_comma = h_num.rfind(',')
+            num = h_num[last_comma + 2:]
+            h_statement = h_num[:last_comma]
+            return_dict[num] =  h_statement
     except:
-        h_numbers = []
-    return h_numbers
+        return_dict = {}
+    return return_dict
         
 def pname(text):
     # section 1.1 - Product name
     pnm = re.search(r"1\.1.+1\.2\s*Releva", text, re.DOTALL).group()
-    
     a = re.search(r"Product name\s*:.+Product Number",pnm,re.DOTALL).group()
-    # remove "Prodct Name : " and "Product Number"
+    # remove "Product Name : " and "Product Number"
     a = a.replace('\n', '')
+    
+    # remove extraneous spaces
+    a = " ".join(a.split())
     
     b = a.replace('Product name : ', '')
     b = b.replace('Product Number', '')
@@ -123,8 +137,8 @@ def pname(text):
 def num_weight(text):
     # Section 3 - composition/information on ingredients
     cprop = re.search(r"COMPOSITION.+FIRST", text, re.DOTALL|re.IGNORECASE).group() #for maol. wt and CAS number
-    
-    num = re.search(r"\d+\s-\s\d{2}\s-\s\d", cprop, re.DOTALL).group()
+
+    num = re.search(r"\d+-\d{2}-\d", cprop, re.DOTALL).group()
     # remove newlines
     num = num.replace('\n', '')
 
@@ -143,7 +157,8 @@ def stability(l):
 
     j = 1
     k = 2
-
+    j += 1
+    k += 1
     for i in range(0,6):
         try:
             if i==4:
@@ -181,4 +196,5 @@ def stability(l):
     # for x,y in zip(idx,v):
     #     print(x+':')
     #     print(y+'\n')
+    ###
     return v 
