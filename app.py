@@ -21,6 +21,19 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 def index():
     return "Hello, World!"
 
+# set up error handler
+@app.errorhandler(BadRequest)
+def handle_exception(e):
+	# https://flask.palletsprojects.com/en/1.1.x/errorhandling/
+    response = e.get_response()
+    response.data = json.dumps({
+        "code": e.code,
+        "name": e.name,
+        "error": e.description
+    })
+    response.content_type = "application/json"
+    return response
+
 @app.route('/pdf', methods=['POST'])
 def file_upload():
 	if 'file' not in request.files:
