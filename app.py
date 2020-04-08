@@ -1,12 +1,15 @@
 #!flask/bin/python
 import os
+import json
+import math
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pdfparser import parse
+from calculation_block import extract_properties
 from hmatrix import max_h_plot
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import BadRequest
-import json
 
 UPLOAD_FOLDER = os.getcwd()
 
@@ -26,7 +29,7 @@ def get_task(task_id):
 	return jsonify({'a':a})
 
 @app.route('/pdf', methods=['POST'])
-def p():
+def get():
 	if 'file' not in request.files:
 		raise BadRequest('No file found')
 	
@@ -38,21 +41,40 @@ def p():
 	path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
 	file.save(path)
 
+	# parse local pdf file
 	try:
-		# parse local pdf file
 		properties = parse(path)
-		return jsonify(properties)
 	except:
 		raise BadRequest('Error parsing file. Please try again')
 	finally:
 		# delete local file
 		os.remove(path)
 	
+	cas_no = properties['casNo']
+	# parse properties from second database
+	try:
+		additional_properties = extract_properties(cas_no)
+		coerce_properties(properties, additional_properties)
+	except Exception as e:
+		raise BadRequest('Unable to get properties from second database')
+	
+	return jsonify(properties)
+	
 
 @app.route('/graph', methods=['POST'])
 def matrix():
 	print(json.loads(request.data))
 	return jsonify(max_h_plot(json.loads(request.data)))
+
+# if a property was not contained in the SDS and retreived with parse(), however does exist
+# in the second database, we'll replace that value in properties with the value from
+# the second database
+def coerce_properties(properties, additional_properties):
+	# relevant properties we're dealing with
+	props = ['boilingPt', 'flashPt', 'autoIgnitionTemp']
+	for prop in props:
+		if properties[prop] == 'No data available' and math.isnan(additional_properties[prop]) is False:
+			properties[prop] == additional_properties[prop]
 
 def is_pdf(filename):
 	return '.' in filename and filename.split('.', 1)[1].lower() == 'pdf'
