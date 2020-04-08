@@ -6,7 +6,7 @@ import math
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pdfparser import parse
-from calculation_block import extract_properties
+from calculation_block import extract_properties, cp
 from hmatrix import max_h_plot
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import BadRequest
@@ -51,6 +51,12 @@ def get():
 		os.remove(path)
 	
 	cas_no = properties['casNo']
+
+	# calculate cp (reactant only)
+	temperature = request.args.get('temperature')
+	if temperature is not None:
+		properties['cp'] = cp(cas_no, temperature)
+
 	# parse properties from second database
 	try:
 		additional_properties = extract_properties(cas_no)
@@ -74,7 +80,7 @@ def coerce_properties(properties, additional_properties):
 	props = ['boilingPt', 'flashPt', 'autoIgnitionTemp']
 	for prop in props:
 		if properties[prop] == 'No data available' and math.isnan(additional_properties[prop]) is False:
-			properties[prop] == additional_properties[prop]
+			properties[prop] = additional_properties[prop]
 
 def is_pdf(filename):
 	return '.' in filename and filename.split('.', 1)[1].lower() == 'pdf'
