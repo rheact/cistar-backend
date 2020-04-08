@@ -16,7 +16,7 @@ def max_h_plot(h_ids):
     # a list of the max h_nums in the plot
     max_h_nums = [0] * NUM_HAZARDS
     
-    df = pd.read_excel("h_matrix.xlsx")
+    df = pd.read_excel("utils/h_matrix.xlsx")
     
     for id in h_ids:
         # not all h-indecies are in the h_matrix.xlsx file
@@ -50,7 +50,6 @@ def max_h_plot(h_ids):
 # and numbers [1, 0, 2, 0, 0, 2, 2, 2, 2, 2, 1],
 # max_h_nums will update to [1, 1, 2, 0, 0, 2, 2, 2, 2, 2, 3]
 def update_h_nums_if_necessary(h_nums, nums):
-    print(nums)
     for i in range(NUM_HAZARDS):
         if nums[i] > h_nums[i]:
             h_nums[i] = nums[i]

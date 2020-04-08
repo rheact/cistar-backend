@@ -5,8 +5,8 @@ import math
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from pdfparser import parse
-from calculation_block import extract_properties, cp
+from parse.pdfparser import parse
+from calculation_block.calculation_block import extract_properties, cp
 from hmatrix import max_h_plot
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import BadRequest
@@ -21,15 +21,8 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 def index():
     return "Hello, World!"
 
-@app.route('/<int:task_id>', methods=['GET'])
-def get_task(task_id):
-	a = task_id+1
-	print(a)
-
-	return jsonify({'a':a})
-
 @app.route('/pdf', methods=['POST'])
-def get():
+def file_upload():
 	if 'file' not in request.files:
 		raise BadRequest('No file found')
 	
