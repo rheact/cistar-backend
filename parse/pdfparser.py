@@ -26,6 +26,10 @@ def parse(f):
 # @return dict: dictionary of property name : value
 def convert_arr_to_dict(a):
     dict = {}
+    # we'll get the explosion limits from the second database later
+    dict['upperExplosionLim'] = 'No data available'
+    dict['lowerExplosionLim'] = 'No data available'
+    
     dict['productName'] = a[0]
     dict['molWt'] = a[1]
     dict['casNo'] = a[2]

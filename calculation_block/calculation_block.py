@@ -1,6 +1,6 @@
 import math
 
-from .services import get_row, extract_auto_ignition_temp, extract_boiling_pt, extract_flash_pt, extract_melting_pt, estimate_cp, celsius_to_kelvin
+from .services import get_row, extract_auto_ignition_temp, extract_boiling_pt, extract_flash_pt, extract_melting_pt, extract_lower_explosion_limit, extract_upper_explosion_limit, estimate_cp, celsius_to_kelvin
 
 def cal(cas,x,T=30,d_h=200):
     col = ['Chemical','LiqCp_A','LiqCp_B']
@@ -62,6 +62,8 @@ def extract_properties(cas):
         'meltingPt': math.nan,
         'flashPt': math.nan,
         'autoIgnitionTemp': math.nan,
+        'upperExplosionLim': math.nan,
+        'lowerExplosionLim': math.nan,
     }
 
     row = get_row(cas)
@@ -70,8 +72,10 @@ def extract_properties(cas):
     
     properties['boilingPt'] = extract_boiling_pt(row)
     properties['meltingPt'] = extract_melting_pt(row)
-    properties['flashPt'] = extract_auto_ignition_temp(row)
-    properties['autoIgnitionTemp'] = extract_flash_pt(row)
+    properties['flashPt'] = extract_flash_pt(row)
+    properties['autoIgnitionTemp'] = extract_auto_ignition_temp(row)
+    properties['upperExplosionLim'] = extract_upper_explosion_limit(row)
+    properties['lowerExplosionLim'] = extract_lower_explosion_limit(row)
     return properties
 
 #Calling the functions

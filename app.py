@@ -24,7 +24,7 @@ def index():
 # set up error handler
 @app.errorhandler(BadRequest)
 def handle_exception(e):
-	# https://flask.palletsprojects.com/en/1.1.x/errorhandling/
+	# taken from https://flask.palletsprojects.com/en/1.1.x/errorhandling/
     response = e.get_response()
     response.data = json.dumps({
         "code": e.code,
@@ -83,7 +83,7 @@ def matrix():
 # the second database
 def coerce_properties(properties, additional_properties):
 	# relevant properties we're dealing with
-	props = ['boilingPt', 'flashPt', 'autoIgnitionTemp']
+	props = ['boilingPt', 'flashPt', 'autoIgnitionTemp', 'upperExplosionLim', 'lowerExplosionLim']
 	for prop in props:
 		if properties[prop] == 'No data available' and math.isnan(additional_properties[prop]) is False:
 			properties[prop] = additional_properties[prop]
