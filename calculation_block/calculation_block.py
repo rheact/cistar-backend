@@ -39,14 +39,32 @@ def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1):
         'adiabaticPressure': ad_p, 
     }
     
-    #print('type: ', type(ad_p))
-    
-    
-    #d_t = ad_t - T
-    #d_p = ad_p - P
 
-def calculate_without_cp_mix():
-    pass
+def calculate_without_cp_mix(reactants, d_h, T = 0, P = 1):
+    cp_mix = 0
+    for reactant in reactants:
+        cp = float(reactant['cp'])
+        fraction = float(reactant['molWtFraction'])
+        cp_mix += cp * fraction
+
+    # multiply heat of reaction by -1 for exo/endothermic reactions
+    d_h = d_h * -1
+    
+    GAMMA = 1.67
+    ad_t = d_h / cp_mix
+    final_t = celsius_to_kelvin(ad_t + T)
+    kelvin = celsius_to_kelvin(T)
+    g = GAMMA/(1 - GAMMA)
+    ad_p = (kelvin/final_t)**(g) * P
+    
+    print("Adiabatic Temperature: " + str(ad_t))
+    print("Adiabatic Pressure: " + str(ad_p))
+
+    return {
+        'adiabaticTemp': ad_t,
+        'finalTemp': kelvin_to_celsius(final_t),
+        'adiabaticPressure': ad_p, 
+    }
 
 # estimates the cp for the chemical with the given cas
 # at the given temperature (in degrees celsius)

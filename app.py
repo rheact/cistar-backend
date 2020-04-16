@@ -72,29 +72,27 @@ def file_upload():
 	
 	return jsonify(properties)
 
-@app.route('/calculate', methods=['GET'])
+@app.route('/calculate', methods=['POST'])
 def calculate():
 	try:
-		operatingParams = json.loads(request.args.get('operatingParams'))
+		data = json.loads(request.data)
+		operatingParams = data['operatingParams']
+		reactants = data['reactants']
+		
 		# operatingParams have been validated on frontend
-		print(operatingParams)
 		heat_of_reaction = float(operatingParams['heatOfReaction'])
 		temperature = float(operatingParams['temperature'])
 		pressure = float(operatingParams['pressure'])
 		if operatingParams['cp'] != '':
-			print('got here')
 			cp = float(operatingParams['cp'])
 			calculation_block = calculate_cp_mix(heat_of_reaction, cp, temperature, pressure)
 		else:
-			calculation_block = {}
+			calculation_block = calculate_without_cp_mix(reactants, heat_of_reaction, temperature, pressure)
 	except Exception as e:
 		raise BadRequest('Unable to compute calculation block')
 
 	return jsonify(calculation_block)
-	
-
-
-	
+		
 
 @app.route('/graph', methods=['POST'])
 def matrix():
