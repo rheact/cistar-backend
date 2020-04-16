@@ -6,7 +6,7 @@ import math
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from parse.pdfparser import parse
-from calculation_block.calculation_block import extract_properties, cp
+from calculation_block.calculation_block import calculate_cp_mix, calculate_without_cp_mix, extract_properties, cp
 from hmatrix import max_h_plot
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import BadRequest
@@ -71,6 +71,29 @@ def file_upload():
 		raise BadRequest('Unable to get properties from second database')
 	
 	return jsonify(properties)
+
+@app.route('/calculate', methods=['GET'])
+def calculate():
+	try:
+		operatingParams = json.loads(request.args.get('operatingParams'))
+		# operatingParams have been validated on frontend
+		print(operatingParams)
+		heat_of_reaction = float(operatingParams['heatOfReaction'])
+		temperature = float(operatingParams['temperature'])
+		pressure = float(operatingParams['pressure'])
+		if operatingParams['cp'] != '':
+			print('got here')
+			cp = float(operatingParams['cp'])
+			calculation_block = calculate_cp_mix(heat_of_reaction, cp, temperature, pressure)
+		else:
+			calculation_block = {}
+	except Exception as e:
+		raise BadRequest('Unable to compute calculation block')
+
+	return jsonify(calculation_block)
+	
+
+
 	
 
 @app.route('/graph', methods=['POST'])

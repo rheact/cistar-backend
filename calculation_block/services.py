@@ -79,3 +79,6 @@ def estimate_cp(row, T):
 
 def celsius_to_kelvin(C):
     return C + 273
+
+def kelvin_to_celsius(K):
+    return K - 273

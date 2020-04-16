@@ -1,35 +1,52 @@
 import math
 
-from .services import get_row, extract_auto_ignition_temp, extract_boiling_pt, extract_flash_pt, extract_melting_pt, extract_lower_explosion_limit, extract_upper_explosion_limit, estimate_cp, celsius_to_kelvin
+from .services import get_row, extract_auto_ignition_temp, extract_boiling_pt, extract_flash_pt, extract_melting_pt, extract_lower_explosion_limit, extract_upper_explosion_limit, estimate_cp, celsius_to_kelvin, kelvin_to_celsius
 
-def cal(cas,x,T=30,d_h=200):
-    col = ['Chemical','LiqCp_A','LiqCp_B']
-    #df = pd.read_excel("chem_data.xlsx")
-    a= df.loc[df['CAS'].isin(cas)][col]
-    b = a[col].values
-    print('b: ', b)
-    n = len(b)
-    m = .373
-    cps = []
+def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1):
+    print(d_h)
+    print(cp_mix)
+    print(T)
+    print(P)
+    # m = 0
+    # cps = []
     # for i in range(n):
     #     cp = b[i][1] + b[i][2]*T
     #     cps.append(cp)
     #     m+= x[i]*cp
     #     print("Cp of " + b[i][0] +": " + str(cp))
 
-    print("Cp of Mixture:" + str(m))
+    # multiply heat of reaction by -1 for exo/endothermic reactions
+    d_h = d_h * -1
+    print(1)
     
-    #ad_t = d_h / m
-    ad_t = -57.1 / .373
-    ad_p = (ad_t/T)**(1.4/0.4)
+    print(T)
+    GAMMA = 1.67
+    ad_t = d_h / cp_mix
+    final_t = celsius_to_kelvin(ad_t + T)
+    kelvin = celsius_to_kelvin(T)
+    print('final_t: ', final_t)
+    print('division: ', (kelvin/final_t))
+    g = GAMMA/(1 - GAMMA)
+    print('gamma: ', g)
+    ad_p = (kelvin/final_t)**(g) * P
     
-    print('type: ', type(ad_p))
-    print(ad_p)
     print("Adiabatic Temperature: " + str(ad_t))
     print("Adiabatic Pressure: " + str(ad_p))
+
+    return {
+        'adiabaticTemp': ad_t,
+        'finalTemp': kelvin_to_celsius(final_t),
+        'adiabaticPressure': ad_p, 
+    }
+    
+    #print('type: ', type(ad_p))
+    
     
     #d_t = ad_t - T
     #d_p = ad_p - P
+
+def calculate_without_cp_mix():
+    pass
 
 # estimates the cp for the chemical with the given cas
 # at the given temperature (in degrees celsius)
