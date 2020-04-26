@@ -1,5 +1,4 @@
 from selenium import webdriver 
-from time import time, sleep
 #from PIL import Image
 from io import BytesIO
 #import csv
@@ -34,7 +33,6 @@ def cameo_selenium_export(cas_no):
 		#This is by default the first entry in the search
 		add_to_chemical_btn = driver.find_element_by_xpath('/html/body/div[2]/div[2]/div[2]/p/a[2]')
 		add_to_chemical_btn.click()
-		sleep(2)
 
 		new_search_btn = driver.find_element_by_xpath('/html/body/div[1]/a[3]')
 		new_search_btn.click()

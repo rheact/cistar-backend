@@ -116,7 +116,6 @@ def cameo():
 	for diluent in diluents:
 		cas_no.append(diluent['casNo'])
 	
-	print(cas_no)
 	return jsonify(cameo_selenium_export(cas_no))
 
 # if a property was not contained in the SDS and retreived with parse(), however does exist
