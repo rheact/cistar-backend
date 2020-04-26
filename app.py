@@ -6,6 +6,7 @@ import math
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from parse.pdfparser import parse
+from parse.cameo_selenium_export import cameo_selenium_export
 from calculation_block.calculation_block import calculate_cp_mix, calculate_without_cp_mix, extract_properties, cp
 from hmatrix import max_h_plot
 from werkzeug.utils import secure_filename
@@ -98,6 +99,25 @@ def calculate():
 def matrix():
 	print(json.loads(request.data))
 	return jsonify(max_h_plot(json.loads(request.data)))
+
+@app.route('/cameo', methods=['POST'])
+def cameo():
+	data = json.loads(request.data)
+	reactants = data['reactants']
+	products = data['products']
+	diluents = data['diluents']
+	cas_no = []
+	for reactant in reactants:
+		cas_no.append(reactant['casNo'])
+	
+	for product in products:
+		cas_no.append(product['casNo'])
+	
+	for diluent in diluents:
+		cas_no.append(diluent['casNo'])
+	
+	print(cas_no)
+	return jsonify(cameo_selenium_export(cas_no))
 
 # if a property was not contained in the SDS and retreived with parse(), however does exist
 # in the second database, we'll replace that value in properties with the value from
