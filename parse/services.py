@@ -2,16 +2,36 @@
 
 import re
 
+# upper/lower explosion limits are an interesting case so I decided to sepparate them
+# from the rest of the physical/chemical properties
+def explosion_limits(text):
+    # Section 9 - Physical and Chemical Properties
+    phys_chem = re.search(r"PHYSICAL AND.+9\.2", text, re.DOTALL|re.IGNORECASE).group()
+
+    regex = r"j\).+k\)"
+    limits = re.search(regex, phys_chem, re.DOTALL).group()
+    limits = limits.replace('\n', '')
+    # remove extraneous spaces
+    limits = " ".join(limits.split())
+
+    try:
+        limits = re.findall(r"[\d\.]+", limits)
+        upper = limits[0]
+        lower = limits[1]
+    except:
+        upper = 'No data available'
+        lower = 'No data available'
+
+    return upper, lower
+
 def get_physical_chemical_properties(text):
     #idx = ['Appearance','Odour','Odour Threshold','pH','Melting point','Initial boiling point','Flash point','Evaporation rate','Flammability','Explosive limits','Vapour pressure','Vapour density','Relative density','Water solubility','Partition coefficient','Auto-ignition temperature','Decomposition temperature','Viscosity','Explosive properties','Oxidizing properties']
     # Section 9 - Physical and Chemical Properties
     phys_chem = re.search(r"PHYSICAL AND.+9\.2", text, re.DOTALL|re.IGNORECASE).group() 
-    p = re.split(r'\n', phys_chem)
-    letters = ['d', 'f', 'g', 'j', 'k', 'l', 'm', 'p', 'q', 'r']
+    letters = ['d', 'f', 'g', 'k', 'l', 'm', 'p', 'q', 'r']
     idx = ['pH ',
         'Initial boiling point and boiling range ',
         'Flash point ',
-        'Upper/lower flammability or explosive limits ',
         'Vapour pressure ',
         'Vapour density ',
         'Relative density ',
@@ -19,7 +39,8 @@ def get_physical_chemical_properties(text):
         'Decomposition temperature ',
         'Viscosity '
     ]
-    properties =['']*len(letters)
+
+    properties =[''] * len(letters)
 
     for i in range(len(letters)):
         letter = letters[i]
@@ -31,9 +52,7 @@ def get_physical_chemical_properties(text):
         if letter == 't':
             next_letter = '9.2'
 
-       
         property = re.search(regex, phys_chem, re.DOTALL).group()
-
         # all of these start with [a])\n \n - 5 chars
         property = property[5:]
         # remove new lines

@@ -1,6 +1,6 @@
 import pdftotext
 
-from .services import get_physical_chemical_properties, get_h_numbers, pname, num_weight
+from .services import get_physical_chemical_properties, get_h_numbers, pname, num_weight, explosion_limits
 
 def parse(f):
     text = ''
@@ -15,9 +15,9 @@ def parse(f):
     phys_chem_properties = get_physical_chemical_properties(text)
     product_name = pname(text)
     cas_num, weight = num_weight(text)
-    
-    properties_list = [product_name]  + [weight] + [cas_num] + phys_chem_properties
+    upperlimit, lowerlimit = explosion_limits(text)
 
+    properties_list = [product_name]  + [weight] + [cas_num] + phys_chem_properties + [upperlimit] + [lowerlimit]
     properties = convert_arr_to_dict(properties_list)
     properties['hNumbers'] = h_numbers
     return properties
@@ -26,22 +26,19 @@ def parse(f):
 # @return dict: dictionary of property name : value
 def convert_arr_to_dict(a):
     dict = {}
-    # we'll get the explosion limits from the second database later
-    dict['upperExplosionLim'] = 'No data available'
-    dict['lowerExplosionLim'] = 'No data available'
-    
     dict['productName'] = a[0]
     dict['molWt'] = a[1]
     dict['casNo'] = a[2]
     dict['ph'] = a[3]
     dict['boilingPt'] = a[4]
     dict['flashPt'] = a[5]
-    dict['flammabilityLimits'] = a[6]
-    dict['vapourPressure'] = a[7]
-    dict['vapourDensity'] = a[8]
-    dict['relDensity'] = a[9]
-    dict['autoIgnitionTemp'] = a[10]
-    dict['decompositionTemp'] = a[11]
-    dict['viscosity'] = a[12]
+    dict['vapourPressure'] = a[6]
+    dict['vapourDensity'] = a[7]
+    dict['relDensity'] = a[8]
+    dict['autoIgnitionTemp'] = a[9]
+    dict['decompositionTemp'] = a[10]
+    dict['viscosity'] = a[11]
+    dict['upperExplosionLim'] = a[12]
+    dict['lowerExplosionLim'] = a[13]
 
     return dict
