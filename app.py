@@ -59,10 +59,9 @@ def file_upload():
 	
 	cas_no = properties['casNo']
 
-	# calculate cp (reactant only)
+	# calculate cp
 	temperature = request.args.get('temperature')
-	if temperature is not None:
-		properties['cp'] = cp(cas_no, temperature)
+	properties['cp'] = cp(cas_no, temperature)
 
 	# parse properties from second database
 	try:
