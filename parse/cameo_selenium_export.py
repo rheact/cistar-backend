@@ -65,4 +65,5 @@ def cameo_selenium_export(cas_no):
 	# im = im.crop((left, top, right, bottom))
 	# im.save('screenshot.png')
 	driver.close()
+	print (html_element)
 	return html_element
