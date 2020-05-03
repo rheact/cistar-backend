@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
 
-GREEN = '#10e831'
-YELLOW = '#f2f745'
+GREEN = '#7fd13b'
+YELLOW = '#ffff00'
 ORANGE = '#ffa500'
-RED = '#fc0324'
+RED = '#c00000'
 
 # for some reason, in h_matrix.xlsx,the only options for colors are 0, 2, 3, 4
 COLORS = {0: GREEN, 2: YELLOW, 3: ORANGE, 4: RED}
