@@ -105,17 +105,12 @@ def cameo():
 	reactants = data['reactants']
 	products = data['products']
 	diluents = data['diluents']
-	cas_no = []
-	for reactant in reactants:
-		cas_no.append(reactant['casNo'])
+	compounds = []
+	compounds.extend(reactants)
+	compounds.extend(products)
+	compounds.extend(diluents)
 	
-	for product in products:
-		cas_no.append(product['casNo'])
-	
-	for diluent in diluents:
-		cas_no.append(diluent['casNo'])
-	
-	return jsonify(cameo_selenium_export(cas_no))
+	return jsonify(cameo_selenium_export(compounds))
 
 # if a property was not contained in the SDS and retreived with parse(), however does exist
 # in the second database, we'll replace that value in properties with the value from
