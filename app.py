@@ -110,7 +110,10 @@ def cameo():
 	compounds.extend(products)
 	compounds.extend(diluents)
 	
-	return jsonify(cameo_selenium_export(compounds))
+	try:
+		return jsonify(cameo_selenium_export(compounds))
+	except Exception as e:
+		raise BadRequest('Unable to create Cameo Table')
 
 # if a property was not contained in the SDS and retreived with parse(), however does exist
 # in the second database, we'll replace that value in properties with the value from
