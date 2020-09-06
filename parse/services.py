@@ -63,14 +63,19 @@ def get_physical_chemical_properties(text):
         property = property.replace(idx[i], '')
         # take from start of substring until [next_letter])
         property = property[0: property.find(next_letter + ')')]
-
-        # attempt to remove units from property
-        try:
-            property = re.search(r"[\d\.]+", property).group()
-        except:
+        
+        # strange case
+        if 'No data available' in property:
             property = 'No data available'
+        else:
+            # attempt to remove units from property
+            try:
+                property = re.search(r"[\d\.]+", property).group()
+            except:
+                property = 'No data available'
+
         properties[i] = property
-        pass
+        
     
     return properties
 
