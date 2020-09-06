@@ -78,6 +78,7 @@ def calculate():
 		data = json.loads(request.data)
 		operatingParams = data['operatingParams']
 		reactants = data['reactants']
+		products = data['products']
 		
 		# operatingParams have been validated on frontend
 		heat_of_reaction = float(operatingParams['heatOfReaction'])
@@ -87,7 +88,7 @@ def calculate():
 			cp = float(operatingParams['cp'])
 			calculation_block = calculate_cp_mix(heat_of_reaction, cp, temperature, pressure)
 		else:
-			calculation_block = calculate_without_cp_mix(reactants, heat_of_reaction, temperature, pressure)
+			calculation_block = calculate_without_cp_mix(reactants, products, heat_of_reaction, temperature, pressure)
 	except Exception as e:
 		raise BadRequest('Unable to compute calculation block')
 

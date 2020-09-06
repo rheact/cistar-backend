@@ -3,10 +3,10 @@ import math
 from .services import get_row, extract_auto_ignition_temp, extract_boiling_pt, extract_flash_pt, extract_melting_pt, extract_lower_explosion_limit, extract_upper_explosion_limit, estimate_cp, celsius_to_kelvin, kelvin_to_celsius
 
 def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1):
-    print(d_h)
-    print(cp_mix)
-    print(T)
-    print(P)
+    # print(d_h)
+    # print(cp_mix)
+    # print(T)
+    # print(P)
     # m = 0
     # cps = []
     # for i in range(n):
@@ -17,7 +17,6 @@ def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1):
 
     # multiply heat of reaction by -1 for exo/endothermic reactions
     d_h = d_h * -1
-    print(1)
     
     print(T)
     GAMMA = 1.67
@@ -40,11 +39,21 @@ def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1):
     }
     
 
-def calculate_without_cp_mix(reactants, d_h, T = 0, P = 1):
+def calculate_without_cp_mix(reactants, products, d_h, T = 0, P = 1):
     cp_mix = 0
+    # print('reactants: ', reactants)
+    # print('products: ', products)
+
+    # add weighted cp of reactants
     for reactant in reactants:
         cp = float(reactant['cp'])
         fraction = float(reactant['molWtFraction'])
+        cp_mix += cp * fraction
+    
+    # add weighted cp of reactants
+    for product in products:
+        cp = float(product['cp'])
+        fraction = float(product['molWtFraction'])
         cp_mix += cp * fraction
 
     # multiply heat of reaction by -1 for exo/endothermic reactions
