@@ -2,4 +2,4 @@ __pycache__/
 .vscode/
 *.png
 .idea/
-.git/
+.git/hi\n
