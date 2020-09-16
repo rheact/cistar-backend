@@ -18,19 +18,15 @@ def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1):
     # multiply heat of reaction by -1 for exo/endothermic reactions
     d_h = d_h * -1
     
-    print(T)
+    #print(T)
     GAMMA = 1.67
     ad_t = d_h / cp_mix
     final_t = celsius_to_kelvin(ad_t + T)
     kelvin = celsius_to_kelvin(T)
-    print('final_t: ', final_t)
-    print('division: ', (kelvin/final_t))
-    g = GAMMA/(1 - GAMMA)
-    print('gamma: ', g)
-    ad_p = (kelvin/final_t)**(g) * P
     
-    print("Adiabatic Temperature: " + str(ad_t))
-    print("Adiabatic Pressure: " + str(ad_p))
+    g = GAMMA/(1 - GAMMA)
+    
+    ad_p = (kelvin/final_t)**(g) * P
 
     return {
         'adiabaticTemp': ad_t,
