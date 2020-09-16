@@ -17,8 +17,7 @@ def max_h_plot(h_ids):
     max_h_nums = [0] * NUM_HAZARDS
     
     df = pd.read_excel("utils/h_matrix.xlsx")
-    
-    for id in h_ids:
+    for id in h_ids.split(', '):
         # not all h-indecies are in the h_matrix.xlsx file
         if id not in list(df['Index']):
             continue

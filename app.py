@@ -97,8 +97,10 @@ def calculate():
 
 @app.route('/graph', methods=['POST'])
 def matrix():
-	print(json.loads(request.data))
-	return jsonify(max_h_plot(json.loads(request.data)))
+	try:
+		return jsonify(max_h_plot(request.data.decode('utf-8')))
+	except Exception as e:
+		raise BadRequest('Unable to create H-Matrix')
 
 @app.route('/cameo', methods=['POST'])
 def cameo():
