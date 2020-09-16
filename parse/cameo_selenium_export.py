@@ -57,7 +57,7 @@ def cameo_selenium_export(compounds):
 	for cmpd in compounds: 
 		cmpd_name = cmpd['productName']
 		cas_id = cmpd['casNo']
-		
+
 		search_by_cmpd(cmpd_name)
 		if 'No matches were found' in driver.page_source:
 		
@@ -67,7 +67,6 @@ def cameo_selenium_export(compounds):
 			if 'No matches were found' or 'Invalid CAS number' in driver.page_source:
 				print('{} with CAS-ID {} is not found in the Cameo dataset'.format(cmpd_name, cas_id))
 				errors.append('{} with CAS-ID {} is not found in the Cameo dataset'.format(cmpd_name, cas_id))
-				continue
 			elif cas_id in driver.page_source: 
 				add_chemical(cas_id)
 			else: 
@@ -85,16 +84,10 @@ def cameo_selenium_export(compounds):
 		predict_react_btn = driver.find_element_by_xpath('/html/body/div[1]/a[7]')
 		predict_react_btn.click()
 		
-		if 'Add at least one more substance to MyChemicals' or 'Add two or more substances' in driver.page_source:
-			print('No compatiblity matrix formed')
-			errors.append('No compatiblity matrix formed')
-			html_element = ''
-		else:
-			#import table 
-			react_table = driver.find_element_by_xpath('/html/body/div[2]/table')
+		react_table = driver.find_element_by_xpath('/html/body/div[2]/table')
 
-			#This is the html element for the table -- printing this out will give all the code 
-			html_element = react_table.get_attribute('outerHTML')
+		#This is the html element for the table -- printing this out will give all the code 
+		html_element = react_table.get_attribute('outerHTML')
 	except: 
 		print('Exception No compatiblity matrix formed')
 		errors.append('No compatiblity matrix formed')
