@@ -20,7 +20,7 @@ def parse(f):
     properties_list = [product_name]  + [weight] + [cas_num] + phys_chem_properties + [upperlimit] + [lowerlimit]
     properties = convert_arr_to_dict(properties_list)
     properties['hNumbers'] = h_numbers
-    properties['hStatements'] = h_numbers
+    properties['hStatements'] = h_statements
     return properties
     
 # a: array of properties
