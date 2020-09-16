@@ -12,17 +12,24 @@ driver = None
 cameo_names = {}
 
 def search_by_cmpd(cmpd_name):
+	#Find the 'Name (not case sensitive)' using Compound name 
 	cmpd_name_input = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[1]/input[1]')
+	
+	#Send compound name keys to the compound name field 
 	cmpd_name_input.send_keys(cmpd_name)
+	
+	#find the 'search Name' and click it 
 	search_cmpd_btn = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[1]/input[2]')
 	search_cmpd_btn.click()
 
 def search_by_casid(cas_id):
 	#Find the 'CAS NUMBER dialog box by xpath'
 	cas_number_input = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[2]/input[1]')
+	
 	#Enter cas-id in the 'CAS NUMBER dialog'
 	cas_number_input.send_keys(cas_id)
-	#find the 'search CAS number' button and click it 
+	
+	#find the 'CAS Number (with or without dashes)' button and click it 
 	search_cas_btn = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[2]/input[2]')
 	search_cas_btn.click()
 
@@ -42,46 +49,70 @@ def add_chemical(cas_id):
 
 def cameo_selenium_export(compounds):
 	driver_setup()
+	
+	# will want to return html element and errors, if any
+	html_element = '',
+	errors = []
 
 	for cmpd in compounds: 
 		cmpd_name = cmpd['productName']
 		cas_id = cmpd['casNo']
-
+		
 		search_by_cmpd(cmpd_name)
 		if 'No matches were found' in driver.page_source:
-			#print('COMPD name not in dataset, finding by CAS-ID')
+		
 			new_search_button()
 			search_by_casid(cas_id)
-			if 'No matches were found' in driver.page_source:
+
+			if 'No matches were found' or 'Invalid CAS number' in driver.page_source:
 				print('{} with CAS-ID {} is not found in the Cameo dataset'.format(cmpd_name, cas_id))
+				errors.append('{} with CAS-ID {} is not found in the Cameo dataset'.format(cmpd_name, cas_id))
 				continue
 			elif cas_id in driver.page_source: 
 				add_chemical(cas_id)
 			else: 
 				print('partial match found for {}, not added to the data'.format(cmpd_name))
+				errors.append('partial match found for {}, not added to the data'.format(cmpd_name))
 		elif cas_id in driver.page_source:
 			add_chemical(cas_id)
 		else:
 			print('partial match found for {}, not added to the data'.format(cmpd_name))
+			errors.append('partial match found for {}, not added to the data'.format(cmpd_name))
 
 		new_search_button()
 
-	predict_react_btn = driver.find_element_by_xpath('/html/body/div[1]/a[7]')
-	predict_react_btn.click()
+	try:
+		predict_react_btn = driver.find_element_by_xpath('/html/body/div[1]/a[7]')
+		predict_react_btn.click()
+		
+		if 'Add at least one more substance to MyChemicals' or 'Add two or more substances' in driver.page_source:
+			print('No compatiblity matrix formed')
+			errors.append('No compatiblity matrix formed')
+			html_element = ''
+		else:
+			#import table 
+			react_table = driver.find_element_by_xpath('/html/body/div[2]/table')
 
-	#import table 
-	react_table = driver.find_element_by_xpath('/html/body/div[2]/table')
-
-	#This is the html element for the table -- printing this out will give all the code 
-	html_element = react_table.get_attribute('outerHTML')
+			#This is the html element for the table -- printing this out will give all the code 
+			html_element = react_table.get_attribute('outerHTML')
+	except: 
+		print('Exception No compatiblity matrix formed')
+		errors.append('No compatiblity matrix formed')
+		html_element = ''
 
 	# replace the cameo names with the ones the user uploaded
 	for compound in compounds:
-		html_element = html_element.replace(cameo_names[compound['casNo']], compound['productName'])
+		try:
+			html_element = html_element.replace(cameo_names[compound['casNo']], compound['productName'])
+		except:
+			pass
 
 	driver_teardown()
 
-	return html_element
+	return {
+		'html_element': html_element,
+		'errors': errors,
+	}
 
 def driver_setup():
 	global driver

@@ -105,16 +105,10 @@ def matrix():
 @app.route('/cameo', methods=['POST'])
 def cameo():
 	data = json.loads(request.data)
-	reactants = data['reactants']
-	products = data['products']
-	diluents = data['diluents']
-	compounds = []
-	compounds.extend(reactants)
-	compounds.extend(products)
-	compounds.extend(diluents)
 	
 	try:
-		return jsonify(cameo_selenium_export(compounds))
+		response = cameo_selenium_export(data['reactants'] + data['products'] + data['diluents'])
+		return jsonify(response)
 	except Exception as e:
 		raise BadRequest('Unable to create Cameo Table')
 
