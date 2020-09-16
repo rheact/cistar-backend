@@ -11,7 +11,7 @@ def parse(f):
         
     pdfFileObject.close()
 
-    h_numbers = get_h_numbers(text)
+    h_numbers, h_statements = get_h_numbers(text)
     phys_chem_properties = get_physical_chemical_properties(text)
     product_name = pname(text)
     cas_num, weight = num_weight(text)
@@ -20,6 +20,7 @@ def parse(f):
     properties_list = [product_name]  + [weight] + [cas_num] + phys_chem_properties + [upperlimit] + [lowerlimit]
     properties = convert_arr_to_dict(properties_list)
     properties['hNumbers'] = h_numbers
+    properties['hStatements'] = h_numbers
     return properties
     
 # a: array of properties

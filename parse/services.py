@@ -79,12 +79,15 @@ def get_physical_chemical_properties(text):
     
     return properties
 
+# returns an string with all the h-Nums, sepparated by commas
+# and a string with all the h-statements, sepparated by newline
 def get_h_numbers(text):
     # Section 2 - hazard info
     hazard_info = re.search(r"2\.1.+2\.2\s*GHS",text,re.DOTALL).group() #for h index
     try:
-        # gonna be a dictionary of h_number : h_statement pairs
-        return_dict = {}
+        return_nums = ''
+        return_statements = ''
+
         # just get h-statements
         osha_hcs = '(OSHA HCS)'
         hazard_info = hazard_info[hazard_info.find(osha_hcs) + len(osha_hcs):]
@@ -98,10 +101,17 @@ def get_h_numbers(text):
             last_comma = h_num.rfind(',')
             num = h_num[last_comma + 2:]
             h_statement = h_num[:last_comma]
-            return_dict[num] =  h_statement
+            return_nums += num + ', '
+            return_statements += h_statement + '\n'
+        
+        # trim last ', ' and last '\n' from return value
+        return_nums = return_nums[:-2]
+        return_statements = return_statements[:-1]
     except:
-        return_dict = {}
-    return return_dict
+        return_nums = ''
+        return_statements = ''
+
+    return return_nums, return_statements
         
 def pname(text):
     # section 1.1 - Product name
