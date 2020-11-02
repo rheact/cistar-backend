@@ -84,6 +84,7 @@ def calculate():
 		heat_of_reaction = float(operatingParams['heatOfReaction'])
 		temperature = float(operatingParams['temperature'])
 		pressure = float(operatingParams['pressure'])
+		print(operatingParams['cp'])
 		if operatingParams['cp'] != '':
 			cp = float(operatingParams['cp'])
 			calculation_block = calculate_cp_mix(heat_of_reaction, cp, temperature, pressure)
@@ -92,6 +93,7 @@ def calculate():
 	except Exception as e:
 		raise BadRequest('Unable to compute calculation block')
 
+	print(calculation_block)
 	return jsonify(calculation_block)
 		
 

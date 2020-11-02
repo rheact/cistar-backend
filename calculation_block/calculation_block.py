@@ -14,6 +14,10 @@ def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1):
     #     cps.append(cp)
     #     m+= x[i]*cp
     #     print("Cp of " + b[i][0] +": " + str(cp))
+    print("d_h: ", d_h)
+    print("cp_mix: ", cp_mix)
+    print("T: ", T)
+    print("P: ", P)
 
     # multiply heat of reaction by -1 for exo/endothermic reactions
     d_h = d_h * -1
@@ -25,9 +29,12 @@ def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1):
     kelvin = celsius_to_kelvin(T)
     
     g = GAMMA/(1 - GAMMA)
-    
+    print("kelvin: ", kelvin)
+    print("final_t: ", final_t)
+    print("P: ", P)
+    print("g: ", g)
     ad_p = (kelvin/final_t)**(g) * P
-
+    print("ad_p: ", ad_p)
     return {
         'adiabaticTemp': ad_t,
         'finalTemp': kelvin_to_celsius(final_t),
