@@ -49,16 +49,23 @@ def calculate_without_cp_mix(reactants, products, d_h, T = 0, P = 1):
 
     # add weighted cp of reactants
     for reactant in reactants:
-        cp = float(reactant['cp'])
+        cp = reactant['cp']
+        if cp == '':
+            cp = 0
+        else:
+            cp = float(cp)
         fraction = float(reactant['molWtFraction'])
         cp_mix += cp * fraction
-    
+
     # add weighted cp of reactants
     for product in products:
-        cp = float(product['cp'])
+        if cp == '':
+            cp = 0
+        else:
+            cp = float(cp)
         fraction = float(product['molWtFraction'])
         cp_mix += cp * fraction
-
+        
     # multiply heat of reaction by -1 for exo/endothermic reactions
     d_h = d_h * -1
     

@@ -79,12 +79,11 @@ def calculate():
 		operatingParams = data['operatingParams']
 		reactants = data['reactants']
 		products = data['products']
-		
+		print(operatingParams)
 		# operatingParams have been validated on frontend
 		heat_of_reaction = float(operatingParams['heatOfReaction'])
 		temperature = float(operatingParams['temperature'])
 		pressure = float(operatingParams['pressure'])
-		print(operatingParams['cp'])
 		if operatingParams['cp'] != '':
 			cp = float(operatingParams['cp'])
 			calculation_block = calculate_cp_mix(heat_of_reaction, cp, temperature, pressure)
