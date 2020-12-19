@@ -3,6 +3,7 @@ from time import time, sleep
 from io import BytesIO
 from selenium import webdriver 
 from selenium.webdriver.chrome.options import Options
+import re
 
 driver = None
 
@@ -46,6 +47,10 @@ def add_chemical(cas_id):
 	add_to_chemical_btn = driver.find_element_by_xpath('/html/body/div[2]/div[2]/div[2]/p/a[2]')
 	add_to_chemical_btn.click()
 
+#To search for a string in the page source 
+def find_txt(string_to_find, src):
+	txt_fnd = re.search(r'{}'.format(string_to_find), src)
+	return txt_fnd
 
 def cameo_selenium_export(compounds):
 	driver_setup()
@@ -57,22 +62,30 @@ def cameo_selenium_export(compounds):
 	for cmpd in compounds: 
 		cmpd_name = cmpd['productName']
 		cas_id = cmpd['casNo']
-
-		search_by_cmpd(cmpd_name)
-		if 'No matches were found' in driver.page_source:
 		
+		search_by_cmpd(cmpd_name)
+		if find_txt('No matches were found', driver.page_source):
+
 			new_search_button()
 			search_by_casid(cas_id)
+			
+			# Check if CAS-ID parsed is proper or not 
+			try: 
+				print('CAS-ID {} for compound {} is invalid, skipping'.format(cas_id, cmpd_name))
+				driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[2]/span')
+				new_search_button()
+				continue 
+			except: 
+				# Check if CAS-ID is found in the dataset 
+				if find_txt('No matches were found', driver.page_source):
+					#Print this out in the dialog box 
+					print('{} with CAS-ID: {} not found in the Cameo dataset'.format(cmpd_name, cas_id))
+					new_search_button()
+				else:
+					print('Match found for {} with CAS-ID: {}, added to the data using CAS-ID'.format(cmpd_name, cas_id))
+					add_chemical(cas_id)
 
-			if 'No matches were found' or 'Invalid CAS number' in driver.page_source:
-				print('{} with CAS-ID {} is not found in the Cameo dataset'.format(cmpd_name, cas_id))
-				errors.append('{} with CAS-ID {} is not found in the Cameo dataset'.format(cmpd_name, cas_id))
-			elif cas_id in driver.page_source: 
-				add_chemical(cas_id)
-			else: 
-				print('partial match found for {}, not added to the data'.format(cmpd_name))
-				errors.append('partial match found for {}, not added to the data'.format(cmpd_name))
-		elif cas_id in driver.page_source:
+		elif find_txt(cas_id, driver.page_source):
 			add_chemical(cas_id)
 		else:
 			print('partial match found for {}, not added to the data'.format(cmpd_name))
