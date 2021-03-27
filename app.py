@@ -109,6 +109,8 @@ def cameo():
 	
 	try:
 		response = cameo_selenium_export(data['reactants'] + data['products'] + data['diluents'])
+		#response.headers["Content-Type"] = "application/json"
+		#headers: {'Access-Control-Allow-Origin': '*'}
 		return jsonify(response)
 	except Exception as e:
 		raise BadRequest('Unable to create Cameo Table')
