@@ -3,7 +3,7 @@ import os
 import json
 import math
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from parse.pdfparser import parse
 from parse.cameo_selenium_export import cameo_selenium_export
@@ -108,11 +108,12 @@ def cameo():
 	data = json.loads(request.data)
 	
 	try:
-		response = cameo_selenium_export(data['reactants'] + data['products'] + data['diluents'])
-		#response.headers["Content-Type"] = "application/json"
+		response = make_response(jsonify(cameo_selenium_export(data['reactants'] + data['products'] + data['diluents'])))
+		response.headers["Access-Control-Allow-Origin"] = '*'
 		#headers: {'Access-Control-Allow-Origin': '*'}
-		return jsonify(response)
+		return response
 	except Exception as e:
+		print('exception: ', e)
 		raise BadRequest('Unable to create Cameo Table')
 
 # if a property was not contained in the SDS and retreived with parse(), however does exist
