@@ -4,7 +4,7 @@ import os
 import json
 import math
 import uuid
-from urllib.parse import unquote
+import ast
 from subprocess import call
 
 from flask import Flask, jsonify, request, make_response, send_file, send_from_directory, safe_join
@@ -121,12 +121,10 @@ def cameo():
 		print('exception: ', e)
 		raise BadRequest('Unable to create Cameo Table')
 
-@app.route('/save', methods=['GET'])
+@app.route('/save', methods=['POST'])
 def save():
 	try:
-		html = unquote(request.args.get('data'))
-
-		print(html)
+		html = ast.literal_eval(request.data.decode('utf-8'))['data']
 		id = str(uuid.uuid4())
 
 		filename = 'report-{}'.format(id)
