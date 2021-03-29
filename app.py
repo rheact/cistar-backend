@@ -1,9 +1,13 @@
 #!flask/bin/python
+# -*- coding: utf-8 -*-
 import os
 import json
 import math
+import uuid
+from urllib.parse import unquote
+from subprocess import call
 
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request, make_response, send_file, send_from_directory, safe_join
 from flask_cors import CORS
 from parse.pdfparser import parse
 from parse.cameo_selenium_export import cameo_selenium_export
@@ -16,6 +20,7 @@ UPLOAD_FOLDER = os.getcwd()
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['REPORT_FOLDER'] = UPLOAD_FOLDER + '/reports'
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/')
@@ -115,6 +120,34 @@ def cameo():
 	except Exception as e:
 		print('exception: ', e)
 		raise BadRequest('Unable to create Cameo Table')
+
+@app.route('/save', methods=['GET'])
+def save():
+	try:
+		html = unquote(request.args.get('data'))
+
+		print(html)
+		id = str(uuid.uuid4())
+
+		filename = 'report-{}'.format(id)
+		path = safe_join(app.config['REPORT_FOLDER'], filename)
+		with open('{}.html'.format(path), 'w') as html_file:
+			html_file.write(html)
+		
+		# transform this html to pdf
+		call(['wkhtmltopdf', '--encoding', 'utf-8', '{}.html'.format(path), '{}.pdf'.format(path)])
+
+		response = send_from_directory(app.config['REPORT_FOLDER'], '{}.pdf'.format(filename), as_attachment=True)
+
+		# clean up temporary files
+		os.remove('{}.html'.format(path))
+		os.remove('{}.pdf'.format(path))
+
+		return response 
+	except Exception as e:
+		print('exception: ', e)
+		raise BadRequest('Unable to create Cameo Table')
+		return {}
 
 # if a property was not contained in the SDS and retreived with parse(), however does exist
 # in the second database, we'll replace that value in properties with the value from
