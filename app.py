@@ -133,7 +133,7 @@ def save():
 			html_file.write(html)
 		
 		# transform this html to pdf
-		call(['/app/bin/wkhtmltopdf', '--encoding', 'utf-8', '{}.html'.format(path), '{}.pdf'.format(path)])
+		call(['wkhtmltopdf', '--encoding', 'utf-8', '{}.html'.format(path), '{}.pdf'.format(path)])
 		response = send_from_directory(app.config['REPORT_FOLDER'], '{}.pdf'.format(filename), as_attachment=True)
 
 		# clean up temporary files
