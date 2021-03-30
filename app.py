@@ -7,7 +7,7 @@ import uuid
 import ast
 from subprocess import call
 
-from flask import Flask, jsonify, request, make_response, send_file, send_from_directory, safe_join
+from flask import Flask, jsonify, request, make_response, send_from_directory, safe_join
 from flask_cors import CORS
 from parse.pdfparser import parse
 from parse.cameo_selenium_export import cameo_selenium_export
