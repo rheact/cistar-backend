@@ -129,8 +129,13 @@ def save():
 
 		filename = 'report-{}'.format(id)
 		path = safe_join(app.config['REPORT_FOLDER'], filename)
+		print('upload folder is', app.config['REPORT_FOLDER'])
+		print('path is ', path)
 		with open('{}.html'.format(path), 'w') as html_file:
 			html_file.write(html)
+		
+		print('wrote html file')
+
 		
 		# transform this html to pdf
 		call(['wkhtmltopdf', '--encoding', 'utf-8', '{}.html'.format(path), '{}.pdf'.format(path)])
