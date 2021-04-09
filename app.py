@@ -10,7 +10,7 @@ from subprocess import call
 from flask import Flask, jsonify, request, make_response, send_from_directory, safe_join
 from flask_cors import CORS
 from parse.pdfparser import parse
-from parse.cameo_selenium_export import cameo_selenium_export
+from parse.cameo_selenium_export import cameo_selenium_export, init_driver
 from calculation_block.calculation_block import calculate_cp_mix, calculate_without_cp_mix, extract_properties, cp
 from hmatrix import max_h_plot
 from werkzeug.utils import secure_filename
@@ -22,6 +22,8 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['REPORT_FOLDER'] = UPLOAD_FOLDER + '/reports'
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+init_driver()
 
 @app.route('/')
 def index():
@@ -162,4 +164,4 @@ def is_pdf(filename):
 	return '.' in filename and filename.split('.', 1)[1].lower() == 'pdf'
 
 if __name__ == '__main__':
-    app.run()
+	app.run()

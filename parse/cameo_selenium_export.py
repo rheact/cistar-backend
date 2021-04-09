@@ -1,5 +1,4 @@
 from selenium import webdriver 
-from time import time, sleep
 from io import BytesIO
 from selenium import webdriver 
 from selenium.webdriver.chrome.options import Options
@@ -11,6 +10,18 @@ driver = None
 # so this data structure will hold
 # cas_id : name pairs so we can look up the proper name later and replace it.
 cameo_names = {}
+
+def init_driver():
+	global driver
+	
+	# These options will speed up futher: 
+	chrome_options = Options()
+	chrome_options.add_argument("--headless")
+	chrome_options.add_argument("--disable-extensions")
+	chrome_options.add_argument("--disable-gpu")
+	# chrome_options.add_argument("--no-sandbox") # linux only
+
+	driver = webdriver.Chrome(options=chrome_options)
 
 def search_by_cmpd(cmpd_name):
 	#Find the 'Name (not case sensitive)' using Compound name 
@@ -49,11 +60,10 @@ def add_chemical(cas_id):
 
 #To search for a string in the page source 
 def find_txt(string_to_find, src):
-	txt_fnd = re.search(r'{}'.format(string_to_find), src)
-	return txt_fnd
+	return re.search(r'{}'.format(string_to_find), src)
 
 def cameo_selenium_export(compounds):
-	driver_setup()
+	driver.get('https://cameochemicals.noaa.gov/search/simple')
 	
 	# will want to return html element and errors, if any
 	html_element = '',
@@ -113,27 +123,7 @@ def cameo_selenium_export(compounds):
 		except:
 			pass
 
-	driver_teardown()
-
 	return {
 		'html_element': html_element,
 		'errors': errors,
 	}
-
-def driver_setup():
-	global driver
-	chrome_options = Options()
-	#These options will speed up the futher: 
-	#chrome_options.add_argument("--disable-extensions")
-	chrome_options.add_argument("--disable-gpu")
-
-	#chrome_options.add_argument("--no-sandbox") # linux only
-	chrome_options.add_argument("--headless")
-	driver = webdriver.Chrome(options=chrome_options)
-
-	driver.get('https://cameochemicals.noaa.gov/search/simple')
-	driver.implicitly_wait(10)
-
-def driver_teardown():
-	driver.close()
-	driver.quit()
