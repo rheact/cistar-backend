@@ -86,7 +86,6 @@ def calculate():
 		operatingParams = data['operatingParams']
 		reactants = data['reactants']
 		products = data['products']
-		print(operatingParams)
 		# operatingParams have been validated on frontend
 		heat_of_reaction = float(operatingParams['heatOfReaction'])
 		temperature = float(operatingParams['temperature'])
@@ -99,7 +98,6 @@ def calculate():
 	except Exception as e:
 		raise BadRequest('Unable to compute calculation block')
 
-	print(calculation_block)
 	return jsonify(calculation_block)
 		
 
