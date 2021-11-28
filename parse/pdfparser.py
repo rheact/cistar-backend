@@ -1,6 +1,7 @@
 import pdftotext
 
 from .services import get_physical_chemical_properties, get_h_numbers, pname, num_weight, explosion_limits
+from .ppe import get_ppe
 
 def parse(f):
     text = ''
@@ -16,11 +17,14 @@ def parse(f):
     product_name = pname(text)
     cas_num, weight = num_weight(text)
     upperlimit, lowerlimit = explosion_limits(text)
+    ppe_sections, ppe_pages = get_ppe(text)
 
     properties_list = [product_name]  + [weight] + [cas_num] + phys_chem_properties + [upperlimit] + [lowerlimit]
     properties = convert_arr_to_dict(properties_list)
     properties['hNumbers'] = h_numbers
     properties['hStatements'] = h_statements
+    properties['ppe_sections'] = ppe_sections
+    properties['ppe_pages'] = ppe_pages
     return properties
     
 # a: array of properties

@@ -45,10 +45,12 @@ def handle_exception(e):
 @app.route('/pdf', methods=['POST'])
 def file_upload():
 	if 'file' not in request.files:
+		print('No file found')
 		raise BadRequest('No file found')
 	
 	file = request.files['file']
 	if not is_pdf(file.filename):
+		print('Not a PDF file')
 		raise BadRequest('Not a PDF file')
 	
 	# save pdf file locally
@@ -59,7 +61,8 @@ def file_upload():
 	try:
 		properties = parse(path)
 	except:
-		raise BadRequest('Error parsing file. Please try again')
+		print('Error parsing file. Please try again')
+		raise Exception('Error parsing file. Please try again')
 	finally:
 		# delete local file
 		os.remove(path)
@@ -75,6 +78,7 @@ def file_upload():
 		additional_properties = extract_properties(cas_no)
 		coerce_properties(properties, additional_properties)
 	except Exception as e:
+		print('Unable to get properties from second database')
 		raise BadRequest('Unable to get properties from second database')
 	
 	return jsonify(properties)
