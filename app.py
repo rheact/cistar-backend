@@ -9,7 +9,7 @@ from subprocess import call
 
 from flask import Flask, jsonify, request, make_response, send_from_directory, safe_join
 from flask_cors import CORS
-from parse.pdfparser import parse
+from sds.parser import parse
 from parse.cameo_selenium_export import cameo_selenium_export, init_driver
 from calculation_block.calculation_block import calculate_cp_mix, calculate_without_cp_mix, extract_properties, cp
 from hmatrix import max_h_plot
@@ -24,64 +24,6 @@ app.config['REPORT_FOLDER'] = UPLOAD_FOLDER + '/reports'
 CORS(app)
 
 init_driver()
-
-@app.route('/')
-def index():
-    return "Hello, World!"
-
-# set up error handler
-@app.errorhandler(BadRequest)
-def handle_exception(e):
-	# taken from https://flask.palletsprojects.com/en/1.1.x/errorhandling/
-    response = e.get_response()
-    response.data = json.dumps({
-        "code": e.code,
-        "name": e.name,
-        "error": e.description
-    })
-    response.content_type = "application/json"
-    return response
-
-@app.route('/pdf', methods=['POST'])
-def file_upload():
-	if 'file' not in request.files:
-		print('No file found')
-		raise BadRequest('No file found')
-	
-	file = request.files['file']
-	if not is_pdf(file.filename):
-		print('Not a PDF file')
-		raise BadRequest('Not a PDF file')
-	
-	# save pdf file locally
-	path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-	file.save(path)
-
-	# parse local pdf file
-	try:
-		properties = parse(path)
-	except:
-		print('Error parsing file. Please try again')
-		raise Exception('Error parsing file. Please try again')
-	finally:
-		# delete local file
-		os.remove(path)
-	
-	cas_no = properties['casNo']
-
-	# calculate cp
-	temperature = request.args.get('temperature')
-	properties['cp'] = cp(cas_no, temperature)
-
-	# parse properties from second database
-	try:
-		additional_properties = extract_properties(cas_no)
-		coerce_properties(properties, additional_properties)
-	except Exception as e:
-		print('Unable to get properties from second database')
-		raise BadRequest('Unable to get properties from second database')
-	
-	return jsonify(properties)
 
 @app.route('/calculate', methods=['POST'])
 def calculate():

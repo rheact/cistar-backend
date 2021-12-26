@@ -1,16 +1,16 @@
-# services for pdf parser
-
 import re
 
-# upper/lower explosion limits are an interesting case so I decided to sepparate them
-# from the rest of the physical/chemical properties
-def explosion_limits(text):
+def get_explosion_limits(text):
+    """
+    Upper/lower explosion limits are an interesting case so I decided to
+    separate them from the rest of the physical/chemical properties
+    """
     # Section 9 - Physical and Chemical Properties
     phys_chem = re.search(r"PHYSICAL AND.+9\.2", text, re.DOTALL|re.IGNORECASE).group()
-
     regex = r"j\).+k\)"
     limits = re.search(regex, phys_chem, re.DOTALL).group()
     limits = limits.replace('\n', '')
+
     # remove extraneous spaces
     limits = " ".join(limits.split())
 
@@ -79,9 +79,11 @@ def get_physical_chemical_properties(text):
     
     return properties
 
-# returns an string with all the h-Nums, sepparated by commas
-# and a string with all the h-statements, sepparated by newline
 def get_h_numbers(text):
+    """
+    Returns an string with all the h-Nums, sepparated by commas
+    and a string with all the h-statements, sepparated by newline
+    """
     # Section 2 - hazard info
     hazard_info = re.search(r"2\.1.+2\.2\s*GHS",text,re.DOTALL).group() #for h index
     try:
@@ -113,7 +115,7 @@ def get_h_numbers(text):
 
     return return_nums, return_statements
         
-def pname(text):
+def get_product_name(text):
     # section 1.1 - Product name
     pnm = re.search(r"1\.1.+1\.2\s*Releva", text, re.DOTALL).group()
     a = re.search(r"Product name\s*:.+Product Number",pnm,re.DOTALL).group()
@@ -128,8 +130,10 @@ def pname(text):
 
     return b
     
-# CAS # and molecular weight
-def num_weight(text):
+def get_CAS_weight(text):
+    """
+    CAS # and molecular weight
+    """
     # Section 3 - composition/information on ingredients
     cprop = re.search(r"COMPOSITION.+FIRST", text, re.DOTALL|re.IGNORECASE).group() #for maol. wt and CAS number
 
