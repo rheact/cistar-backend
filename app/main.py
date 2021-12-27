@@ -1,6 +1,8 @@
 from fastapi import FastAPI
+
+from models import SDSExtraction
 from .routers import pdf
-from parse.cameo_selenium_export import cameo_selenium_export, init_driver
+from cameo.crawler import cameo_selenium_export, init_driver
 
 init_driver()
 app = FastAPI()

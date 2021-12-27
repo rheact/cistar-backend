@@ -1,12 +1,18 @@
+import math
 from fastapi import APIRouter, HTTPException, UploadFile, File
-
+from models.sds_extract import SDSExtraction
 from sds.parser import parse
 from calculation_block.calculation_block import extract_properties, cp
 
 router = APIRouter()
 
-@router.post('/pdf')
+@router.post('/pdf', response_model=SDSExtraction)
 def file_upload(sds: UploadFile = File(...), temperature=None):
+    """
+    Extracts information from an SDS document.
+    Temperature (in Celcius) is required to caluclate Cp of the compound.
+    Only Sigma-Aldrich SDS are allowed at the moment.
+    """
     if temperature is None:
         raise HTTPException(400, "Temperature (in Celcius) required")
     if not sds.filename.lower().endswith('.pdf'):
@@ -28,11 +34,8 @@ def file_upload(sds: UploadFile = File(...), temperature=None):
     properties['cp'] = cp(cas_no, temperature)
 
     # Parse properties from second database
-    try:
-        additional_properties = extract_properties(cas_no)
-        coerce_properties(properties, additional_properties)
-    except Exception as e:
-        raise HTTPException(400, "Unable to get properties from second database")
+    additional_properties = extract_properties(cas_no)
+    coerce_properties(properties, additional_properties)
     
     return properties
 
@@ -44,5 +47,5 @@ def coerce_properties(properties, additional_properties):
     """
     props = ['boilingPt', 'flashPt', 'autoIgnitionTemp', 'upperExplosionLim', 'lowerExplosionLim']
     for prop in props:
-        if properties[prop] == 'No data available' and math.isnan(additional_properties[prop]) is False:
+        if properties[prop] == 'No data available' and prop in additional_properties and not math.isnan(additional_properties[prop]):
             properties[prop] = additional_properties[prop]
