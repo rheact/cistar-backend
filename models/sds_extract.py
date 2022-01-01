@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from typing import Dict, List, Optional, TypedDict
+from typing import List, Optional, TypedDict
 
-PPESectionsT = TypedDict('PPESectionsT', {
+PPESections = TypedDict('PPESections', {
     "Appropriate Engineering Controls": str,
     "Eye/face protection": str,
     "Skin protection": str,
@@ -26,7 +26,7 @@ class SDSExtraction(BaseModel):
     upperExplosionLim: str
     lowerExplosionLim: str
     hNumbers: str
-    hStatements: str
-    cp: float
+    hStatements: Optional[str]
+    cp: str
     ppe_pages: Optional[List[int]]
-    ppe_sections: PPESectionsT
+    ppe_sections: Optional[PPESections]

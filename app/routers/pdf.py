@@ -1,8 +1,8 @@
 import math
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from models.sds_extract import SDSExtraction
-from sds.parser import parse
-from calculation_block.calculation_block import extract_properties, cp
+from services.calculation_block import extract_properties, cp
+from services.sds.parser import parse
 
 router = APIRouter()
 

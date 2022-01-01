@@ -1,13 +1,10 @@
 from fastapi import FastAPI
+from .routers import pdf, results
 
-from models import SDSExtraction
-from .routers import pdf
-from cameo.crawler import cameo_selenium_export, init_driver
-
-init_driver()
 app = FastAPI()
 
 app.include_router(pdf.router)
+app.include_router(results.router)
 
 @app.get("/")
 async def root():

@@ -4,4 +4,5 @@ __pycache__/
 .idea/
 .git/hi\n
 env/
+.env/
 .DS_store
