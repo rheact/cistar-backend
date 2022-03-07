@@ -17,8 +17,10 @@ def file_upload(sds: UploadFile = File(...), temperature=None):
         raise HTTPException(400, "Temperature (in Celcius) required")
     if not sds.filename.lower().endswith('.pdf'):
         raise HTTPException(400, "Uploaded file is not a PDF")
+    
+    #TODO: Standardise temperature
 
-    # parse local pdf file
+    # Parse pdf file
     try:
         properties = parse(sds.file)
     except:

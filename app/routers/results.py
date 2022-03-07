@@ -12,9 +12,12 @@ def calculate(rstate: RheactState):
     operatingParams = rstate.operatingParams
     reactants = rstate.compound.reactants
     products = rstate.compound.products
+
+    #TODO: Standardise
     heat_of_reaction = float(operatingParams.heatOfReaction)
     temperature = float(operatingParams.temperature)
     pressure = float(operatingParams.pressure)
+
     try:
         if operatingParams.cp != '':
             cp = float(operatingParams.cp)
@@ -24,6 +27,7 @@ def calculate(rstate: RheactState):
     except Exception as e:
         raise HTTPException(500, 'Unable to compute calculation block: ' + str(e))
 
+    # TODO: Unstandardise
     return calculation_block
 
 @router.post('/graph', response_model=HMatrixColumn)
