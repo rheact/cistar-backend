@@ -1,14 +1,15 @@
 import pdftotext
 
 from .services import get_physical_chemical_properties, get_h_numbers, pname, num_weight, explosion_limits
-from .ppe import get_ppe
+from .ppe_pages import get_ppe_page_nos, get_ppe_pages_base64
 
 def parse(f):
-    text = ''
+    pagetexts = []
     pdfFileObject = open(f, 'rb')
     pdf = pdftotext.PDF(pdfFileObject)
     for page in pdf:
-        text += page
+        pagetexts.append(page)
+    text = ''.join(pagetexts)
         
     pdfFileObject.close()
 
@@ -17,13 +18,14 @@ def parse(f):
     product_name = pname(text)
     cas_num, weight = num_weight(text)
     upperlimit, lowerlimit = explosion_limits(text)
-    ppe_sections, ppe_pages = get_ppe(text)
+
+    pagerange = get_ppe_page_nos(pagetexts)
+    ppe_pages = get_ppe_pages_base64(f, pagerange)
 
     properties_list = [product_name]  + [weight] + [cas_num] + phys_chem_properties + [upperlimit] + [lowerlimit]
     properties = convert_arr_to_dict(properties_list)
     properties['hNumbers'] = h_numbers
     properties['hStatements'] = h_statements
-    properties['ppe_sections'] = ppe_sections
     properties['ppe_pages'] = ppe_pages
     return properties
     

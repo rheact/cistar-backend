@@ -3,5 +3,5 @@ __pycache__/
 *.png
 .idea/
 .git/hi\n
-env/
+.env/
 .DS_store

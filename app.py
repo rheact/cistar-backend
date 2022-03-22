@@ -23,7 +23,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['REPORT_FOLDER'] = UPLOAD_FOLDER + '/reports'
 CORS(app)
 
-init_driver()
+# init_driver()
 
 @app.route('/')
 def index():
@@ -71,7 +71,10 @@ def file_upload():
 
 	# calculate cp
 	temperature = request.args.get('temperature')
-	properties['cp'] = cp(cas_no, temperature)
+	if temperature is not None and temperature.isnumeric():
+		properties['cp'] = cp(cas_no, temperature)
+	else:
+		properties['cp'] = None
 
 	# parse properties from second database
 	try:
