@@ -3,7 +3,6 @@ attrs==21.2.0
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.8
-chromedriver-binary @ file:///Users/runner/miniforge3/conda-bld/python-chromedriver-binary_1646474596514/work
 click==8.0.3
 cryptography==36.0.0
 et-xmlfile==1.1.0
