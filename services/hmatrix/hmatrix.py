@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 
 GREEN = '#7fd13b'
 YELLOW = '#ffff00'
@@ -16,7 +15,7 @@ def max_h_plot(h_ids):
     # a list of the max h_nums in the plot
     max_h_nums = [0] * NUM_HAZARDS
     
-    df = pd.read_excel("utils/h_matrix.xlsx")
+    df = pd.read_excel("data/h_matrix.xlsx")
     for id in h_ids.split(', '):
         # not all h-indecies are in the h_matrix.xlsx file
         if id not in list(df['Index']):

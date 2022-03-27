@@ -1,4 +1,3 @@
-from io import BufferedReader
 import fitz
 import base64
 import re
@@ -46,12 +45,10 @@ def get_ppe_page_nos(pagetexts: List[str]) -> Optional[Tuple[int, int]]:
 
     return start, end
 
-def get_ppe_pages_base64(f: BufferedReader, pagerange: Tuple[int,int]) -> List[str]:
+def get_ppe_pages_base64(doc: fitz.Document, pagerange: Tuple[int,int]) -> List[str]:
     pbytes = list()
-    doc = fitz.open(f)
     for pno in range(pagerange[0], pagerange[1]+1):
         page = doc.load_page(pno)
         pb = base64.b64encode(page.get_pixmap().tobytes())
         pbytes.append("data:image/png;base64, " + pb.decode('utf-8'))
-    doc.close()
     return pbytes

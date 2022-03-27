@@ -1,40 +1,17 @@
 import math
-
 from .services import get_row, extract_auto_ignition_temp, extract_boiling_pt, extract_flash_pt, extract_melting_pt, extract_lower_explosion_limit, extract_upper_explosion_limit, estimate_cp, celsius_to_kelvin, kelvin_to_celsius
+from .model import ReactionCalculation
 
-def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1):
-    # print(d_h)
-    # print(cp_mix)
-    # print(T)
-    # print(P)
-    # m = 0
-    # cps = []
-    # for i in range(n):
-    #     cp = b[i][1] + b[i][2]*T
-    #     cps.append(cp)
-    #     m+= x[i]*cp
-    #     print("Cp of " + b[i][0] +": " + str(cp))
-    # print("d_h: ", d_h)
-    # print("cp_mix: ", cp_mix)
-    # print("T: ", T)
-    # print("P: ", P)
+GAMMA = 1.67
+g = GAMMA/(1 - GAMMA)
 
-    # multiply heat of reaction by -1 for exo/endothermic reactions
+def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1) -> ReactionCalculation:
+    # Multiply heat of reaction by -1 for exo/endothermic reactions
     d_h = d_h * -1
-    
-    #print(T)
-    GAMMA = 1.67
     ad_t = d_h / cp_mix
     final_t = celsius_to_kelvin(ad_t + T)
     kelvin = celsius_to_kelvin(T)
-    
-    g = GAMMA/(1 - GAMMA)
-    # print("kelvin: ", kelvin)
-    # print("final_t: ", final_t)
-    # print("P: ", P)
-    # print("g: ", g)
     ad_p = (kelvin/final_t)**(g) * P
-    #print("ad_p: ", ad_p)
     return {
         'adiabaticTemp': ad_t,
         'finalTemp': kelvin_to_celsius(final_t),
@@ -42,7 +19,7 @@ def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1):
     }
     
 
-def calculate_without_cp_mix(reactants, products, d_h, T = 0, P = 1):
+def calculate_without_cp_mix(reactants, products, d_h, T = 0, P = 1) -> ReactionCalculation:
     cp_mix = 0
     # print('reactants: ', reactants)
     # print('products: ', products)
@@ -68,17 +45,10 @@ def calculate_without_cp_mix(reactants, products, d_h, T = 0, P = 1):
         
     # multiply heat of reaction by -1 for exo/endothermic reactions
     d_h = d_h * -1
-    
-    GAMMA = 1.67
     ad_t = d_h / cp_mix
     final_t = celsius_to_kelvin(ad_t + T)
     kelvin = celsius_to_kelvin(T)
-    g = GAMMA/(1 - GAMMA)
     ad_p = (kelvin/final_t)**(g) * P
-    
-    # print("Adiabatic Temperature: " + str(ad_t))
-    # print("Adiabatic Pressure: " + str(ad_p))
-
     return {
         'adiabaticTemp': ad_t,
         'finalTemp': kelvin_to_celsius(final_t),
@@ -135,7 +105,6 @@ def extract_properties(cas):
 #Calling the functions
 #x = [0.25,0.25,0.25,0.25]
 #cas = ['75-07-0','64-19-7','108-24-7','67-64-1']
-
 
 # Calculation block example
 # weighted average
