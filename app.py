@@ -6,6 +6,7 @@ import math
 import uuid
 import ast
 from subprocess import call
+import traceback
 
 from flask import Flask, jsonify, request, make_response, send_from_directory, safe_join
 from flask_cors import CORS
@@ -23,7 +24,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['REPORT_FOLDER'] = UPLOAD_FOLDER + '/reports'
 CORS(app)
 
-# init_driver()
+init_driver()
 
 @app.route('/')
 def index():
@@ -91,8 +92,8 @@ def calculate():
 	try:
 		data = json.loads(request.data)
 		operatingParams = data['operatingParams']
-		reactants = data['reactants']
-		products = data['products']
+		reactants = data['compound']['reactants']
+		products = data['compound']['products']
 		# operatingParams have been validated on frontend
 		heat_of_reaction = float(operatingParams['heatOfReaction'])
 		temperature = float(operatingParams['temperature'])
@@ -103,7 +104,7 @@ def calculate():
 		else:
 			calculation_block = calculate_without_cp_mix(reactants, products, heat_of_reaction, temperature, pressure)
 	except Exception as e:
-		raise BadRequest('Unable to compute calculation block')
+		raise BadRequest('Unable to compute calculation block: ' + str(e))
 
 	return jsonify(calculation_block)
 		
@@ -122,11 +123,9 @@ def cameo():
 	try:
 		response = make_response(jsonify(cameo_selenium_export(data['reactants'] + data['products'] + data['diluents'])))
 		response.headers["Access-Control-Allow-Origin"] = '*'
-		#headers: {'Access-Control-Allow-Origin': '*'}
 		return response
 	except Exception as e:
-		print('exception: ', e)
-		raise BadRequest('Unable to create Cameo Table')
+		raise BadRequest('Unable to create Cameo Table: ' + str(e))
 
 @app.route('/save', methods=['POST'])
 def save():
@@ -151,9 +150,8 @@ def save():
 
 		return response 
 	except Exception as e:
-		print('exception: ', e)
+		traceback.print_exception(e)
 		raise BadRequest('Unable to create Cameo Table')
-		return {}
 
 # if a property was not contained in the SDS and retreived with parse(), however does exist
 # in the second database, we'll replace that value in properties with the value from

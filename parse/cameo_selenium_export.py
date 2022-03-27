@@ -1,6 +1,4 @@
-#import chromedriver_binary
 from selenium import webdriver 
-from io import BytesIO
 from selenium.webdriver.chrome.options import Options
 import re
 
