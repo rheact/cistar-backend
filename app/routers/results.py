@@ -1,8 +1,8 @@
-from webbrowser import Opera
+import math
 from fastapi import APIRouter, HTTPException
-from models.rheact_state import Compound, RheactState
+from models import Equation, RheactState, ReactionCalculation
 from services.cameo.crawler import get_cameo
-from services.calculation_block import calculate_cp_mix, calculate_without_cp_mix, ReactionCalculation
+from services.calculation_block import get_final_calculations, get_calculated_cp
 from services.cameo.model import CameoTable
 from services.hmatrix import max_h_plot, HMatrixColumn
 
@@ -11,24 +11,26 @@ router = APIRouter()
 @router.post('/calculate', response_model=ReactionCalculation)
 def calculate(rstate: RheactState):
     operatingParams = rstate.operatingParams
-    reactants = rstate.compound.reactants
-    products = rstate.compound.products
 
-    #TODO: Standardise
-    heat_of_reaction = float(operatingParams.heatOfReaction)
-    temperature = float(operatingParams.temperature)
-    pressure = float(operatingParams.pressure)
+    d_h = float(operatingParams.heatOfReaction)
+    T = float(operatingParams.temperature)
+    P = float(operatingParams.pressure)
+    cp = math.nan
 
-    try:
-        if operatingParams.cp != '':
-            cp = float(operatingParams.cp)
-            calculation_block = calculate_cp_mix(heat_of_reaction, cp, temperature, pressure)
-        else:
-            calculation_block = calculate_without_cp_mix(reactants, products, heat_of_reaction, temperature, pressure)
-    except Exception as e:
-        raise HTTPException(500, 'Unable to compute calculation block: ' + str(e))
+    # If user has not provided Cp mix, then we calculate based on mol fractions and individual Cps
+    if operatingParams.cp == '' or operatingParams.cp == None:
+        cp = get_calculated_cp(rstate.compound)
+    else:
+        cp = float(operatingParams.cp)
 
-    # TODO: Unstandardise
+    # TODO: Standardise units
+    # TODO: This is done by checking the rstate unit configurations
+
+    calculation_block = get_final_calculations(T, P, d_h, cp, rstate.operatingParams.basis, rstate.compound)
+
+    # TODO: Unstandardise units
+    # TODO: This is reverse transformation of above steps
+
     return calculation_block
 
 @router.post('/graph', response_model=HMatrixColumn)
@@ -39,7 +41,7 @@ def matrix(hnums: str):
         raise HTTPException(500, 'Unable to create H-Matrix: ' + str(e))
 
 @router.post('/cameo', response_model=CameoTable)
-def cameo(compound: Compound):
+def cameo(compound: Equation):
     data = list()
     for cls in [compound.reactants, compound.products, compound.diluents]:
         for c in cls:

@@ -1,118 +1,92 @@
-import math
-from .services import get_row, extract_auto_ignition_temp, extract_boiling_pt, extract_flash_pt, extract_melting_pt, extract_lower_explosion_limit, extract_upper_explosion_limit, estimate_cp, celsius_to_kelvin, kelvin_to_celsius
-from .model import ReactionCalculation
+from models import BaseChemicalIndex, Chemical, Equation, ReactionCalculation
 
-GAMMA = 1.67
-g = GAMMA/(1 - GAMMA)
+__GAMMA = 1.67
+__G = __GAMMA/(1 - __GAMMA)
 
-def calculate_cp_mix(d_h, cp_mix, T = 0, P = 1) -> ReactionCalculation:
-    # Multiply heat of reaction by -1 for exo/endothermic reactions
-    d_h = d_h * -1
-    ad_t = d_h / cp_mix
-    final_t = celsius_to_kelvin(ad_t + T)
-    kelvin = celsius_to_kelvin(T)
-    ad_p = (kelvin/final_t)**(g) * P
+def get_basis(eq: Equation, basis: BaseChemicalIndex) -> Chemical:
+    assert type(basis) == BaseChemicalIndex, "Passed object is not a base chemical index"
+    assert basis.list in ['reactants', 'products', 'diluents'], f"List specified is not in equation: {basis.list}"
+
+    if(basis.list == 'reactants'):
+        assert basis.index < len(eq.reactants), f'Index out of bound for list {basis.list}: {basis.index}'
+        return eq.reactants[basis.index]
+
+    if(basis.list == 'products'):
+        assert basis.index < len(eq.products), f'Index out of bound for list {basis.list}: {basis.index}'
+        return eq.products[basis.index]
+
+    assert basis.index < len(eq.diluents), f'Index out of bound for list {basis.list}: {basis.index}'
+    return eq.diluents[basis.index]
+
+def get_final_calculations(ini_T: float, ini_P: float, d_h: float, cp_mix: float, baseIndex: BaseChemicalIndex, eq: Equation) -> ReactionCalculation:
+    """
+    Inputs:
+    - T in degC
+    - P in bar
+    - Delta H in cal/g/
+    - C_p mix in cal/g/degC
+    
+    Calculates
+    - Adiabatic temperature change
+    - Final temperature
+    - Adiabatic pressure change
+    """
+
+    base = get_basis(eq, baseIndex)
+    try:
+        X_i = float(base.molWtFraction)
+    except ValueError:
+        raise Exception(f'Mol wt fraction of {base.productName} is not a float: {base.molWtFraction}')
+
+    if X_i > 1:
+        raise Exception(f'Mol wt fraction of {base.productName} is greater than 1: {base.molWtFraction}')
+
+    print('BASE CHEMICAL WT FRACTION ' + str(X_i))
+
+    # ADIABATIC TEMPERATURE CHANGE
+    # - Multiply heat of reaction by -1 for exo/endothermic reactions
+    # - unit: degC
+    ad_T = (-d_h / cp_mix) *  X_i
+
+    # FINAL TEMPERATURE
+    # - unit: degC
+    final_T = ad_T + ini_T
+
+    # ADIABATIC PRESSURE CHANGE
+    # TODO: Fix.
+    kelvin_ini_T = ini_T + 273.15 # TODO: Change
+    ad_P = (kelvin_ini_T/final_T)**(__G) * ini_P
+
     return {
-        'adiabaticTemp': ad_t,
-        'finalTemp': kelvin_to_celsius(final_t),
-        'adiabaticPressure': ad_p, 
+        'adiabaticTemp': ad_T,
+        'finalTemp': final_T,
+        'adiabaticPressure': ad_P, 
     }
     
 
-def calculate_without_cp_mix(reactants, products, d_h, T = 0, P = 1) -> ReactionCalculation:
+def get_calculated_cp(equation: Equation) -> float:
+    """
+    Calculates Cp of mixture
+    Cp = sum^{components}_{j} X_j Cp_j
+    """
     cp_mix = 0
-    # print('reactants: ', reactants)
-    # print('products: ', products)
 
-    # add weighted cp of reactants
-    for reactant in reactants:
-        cp = reactant['cp']
-        if cp == '':
-            cp = 0
-        else:
-            cp = float(cp)
-        fraction = float(reactant['molWtFraction'])
-        cp_mix += cp * fraction
+    concat_components = equation.reactants + equation.products + equation.diluents
 
-    # add weighted cp of reactants
-    for product in products:
-        if cp == '':
-            cp = 0
-        else:
-            cp = float(cp)
-        fraction = float(product['molWtFraction'])
-        cp_mix += cp * fraction
+    for component in concat_components:
+        cp_j: str = component.cp
+        X_j: str = component.molWtFraction
+
+        try:
+            cp_j = float(component.cp)
+        except ValueError:
+            raise Exception(f"Cp is not numeric for {component.productName}")
+
+        try:
+            X_j = float(component.molWtFraction)
+        except ValueError:
+            raise Exception(f"molWtFraction is not numeric for {component.productName}")
         
-    # multiply heat of reaction by -1 for exo/endothermic reactions
-    d_h = d_h * -1
-    ad_t = d_h / cp_mix
-    final_t = celsius_to_kelvin(ad_t + T)
-    kelvin = celsius_to_kelvin(T)
-    ad_p = (kelvin/final_t)**(g) * P
-    return {
-        'adiabaticTemp': ad_t,
-        'finalTemp': kelvin_to_celsius(final_t),
-        'adiabaticPressure': ad_p, 
-    }
-
-# estimates the cp for the chemical with the given cas
-# at the given temperature (in degrees celsius)
-# returns the estimate cp as a number
-# if the cas does not exist in the table it will return the empty string
-# (because the user must input the cp later)
-def cp(cas, T):
-    row = get_row(cas)
-
-    if row is False:
-        return ''
-    
-    # T will be a string, convert to int
-    temp = int(T)
-    if math.isnan(temp) is True:
-        raise Exception
-    
-    return estimate_cp(row, celsius_to_kelvin(temp))
-
-
-# extracts boiling_pt, melting_pt, flash_pt, auto_ignition_temp
-# for the chemical with the given cas
-# returns a dictionary of the form
-# 'propertyName':property
-# if the cas does not exist in the table the dictionary will contain
-# 'propertyName':nan
-def extract_properties(cas):
-    properties = {
-        'boilingPt': math.nan,
-        'meltingPt': math.nan,
-        'flashPt': math.nan,
-        'autoIgnitionTemp': math.nan,
-        'upperExplosionLim': math.nan,
-        'lowerExplosionLim': math.nan,
-    }
-
-    row = get_row(cas)
-    if row is False:
-        return properties
-    
-    properties['boilingPt'] = extract_boiling_pt(row)
-    properties['meltingPt'] = extract_melting_pt(row)
-    properties['flashPt'] = extract_flash_pt(row)
-    properties['autoIgnitionTemp'] = extract_auto_ignition_temp(row)
-    properties['upperExplosionLim'] = extract_upper_explosion_limit(row)
-    properties['lowerExplosionLim'] = extract_lower_explosion_limit(row)
-    return properties
-
-#Calling the functions
-#x = [0.25,0.25,0.25,0.25]
-#cas = ['75-07-0','64-19-7','108-24-7','67-64-1']
-
-# Calculation block example
-# weighted average
-hcl = '7647-01-0'
-x = [0.16, 0.16, 0.16, 0.17, 0.17, 0.17]
-cas = ['65-85-0', '7647-01-0', '7664-93-9', '7446-11-9', '98-07-7', '7732-18-5']
-# for c in cas:
-#     print(get_row(c))
-row = get_row('7647-01-0')
-#extract_auto_ignition_temp('7647-01-0')
-#cal(cas,x,30, -57.1)
+        cp_mix += cp_j * X_j
+        
+    return cp_mix

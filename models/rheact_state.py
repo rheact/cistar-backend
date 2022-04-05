@@ -3,10 +3,11 @@ RHEACT JSON v3 STANDARD
 Drafted by: Vikrant Gajria
 """
 
+from numpy import number
 from pydantic import BaseModel
 from typing import List, Optional, Any
 
-from models.sds_extract import SDSExtraction
+from models.sds import SDSExtraction
 
 class Chemical(SDSExtraction):
     """
@@ -15,16 +16,23 @@ class Chemical(SDSExtraction):
     """
     molWtFraction: Optional[str]
 
-class Compound(BaseModel):
+class BaseChemicalIndex(BaseModel):
     """
-    Compound represents chemicals involved in a reaction.
+    An index for base chemical for /mol units
     """
-    numReactants: int;
-    numProducts: int;
-    numDiluents: int;
-    reactants: List[Chemical];
-    products: List[Chemical];
-    diluents: List[Chemical];
+    list: str
+    index: int
+
+class Equation(BaseModel):
+    """
+    Equation represents chemicals involved in a reaction.
+    """
+    numReactants: int
+    numProducts: int
+    numDiluents: int
+    reactants: List[Chemical]
+    products: List[Chemical]
+    diluents: List[Chemical]
 
 class SideReaction(BaseModel):
     """
@@ -44,8 +52,9 @@ class OperatingParams(BaseModel):
     pressureUnit: Optional[str]
     heatOfReaction: str
     heatOfReactionUnit: Optional[str]
-    cp: str
+    cp: Optional[str]
     cpUnit: Optional[str]
+    basis: BaseChemicalIndex
     physicalState: Optional[str]
     reactionClass: Optional[str]
     reactionScale: Optional[str]
@@ -92,6 +101,6 @@ class RheactState(BaseModel):
     organization: Optional[str]
     chemicalScheme: Optional[str]
     description: Optional[str]
-    compound: Compound
+    compound: Equation
     operatingParams: OperatingParams
     results: Optional[Results]

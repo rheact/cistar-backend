@@ -136,64 +136,10 @@ def get_CAS_weight(text):
     """
     # Section 3 - composition/information on ingredients
     cprop = re.search(r"COMPOSITION.+FIRST", text, re.DOTALL|re.IGNORECASE).group() #for maol. wt and CAS number
-
     num = re.search(r"\d+-\d{2}-\d", cprop, re.DOTALL).group()
-    # remove newlines
-    num = num.replace('\n', '')
+    num = num.replace('\n', '') # Remove newlines
 
-    weight = re.search(r"\d+\.\d+ g/mol", cprop).group() #Mol wt.
-    # remove ' g/mol' (6 chars)
-    weight = weight[:6]
+    # Mol wt.
+    weight = re.search(r"(\d+\.\d+) g/mol", cprop).group(1) 
     return num, weight
-    
-def stability(l):
-    stb = re.search(r"10\. STABILITY.+11\. T",text,re.DOTALL).group() #for stability
-    print('STABILITY AND REACTIVITY')
-    s = re.search(r"10\.1.+11\.",l,re.DOTALL).group()
-    v =[0]*7
-    idx = ['Reactivity','Chemical stability','Possibility of hazardous reactions','Conditions to avoid','Incompatible materials','Hazardous decomposition products formed under fire conditions','Other decomposition products']
 
-
-    j = 1
-    k = 2
-    j += 1
-    k += 1
-    for i in range(0,6):
-        try:
-            if i==4:
-                r = r"10\."+str(j)+".+""10\." +str(k)
-                o = re.search(r,s,re.DOTALL).group()
-                v[i] = re.search(r"\n.+\n\n",o).group()
-                v[i] = v[i].replace('\n','').lower().strip()
-                j = j + 1
-                k = k + 1 
-            if i==5:
-                r = r"10\.6"+".+"+"\nIn"
-                o = re.search(r,s,re.DOTALL).group()
-
-                n = re.search(r"\n\n.+\nIn",o,re.DOTALL).group()
-                h = re.findall(r"- .+\n",n)
-                h[:] = [x.lstrip('-').replace('\n','').lower().strip() for x in h]
-                for x in h:
-                    v[i] = x
-                    i+=1
-
-
-
-
-
-            r = r"10\."+str(j)+".+""10\." +str(k)
-            o = re.search(r,s,re.DOTALL).group()
-            v[i] = re.search(r"\n\n.+\n\n",o).group()
-            v[i] = v[i].replace('\n','').lower().strip()
-            j = j + 1
-            k = k + 1
-        except:
-            j = j + 1
-            k = k + 1
-
-    # for x,y in zip(idx,v):
-    #     print(x+':')
-    #     print(y+'\n')
-    ###
-    return v 

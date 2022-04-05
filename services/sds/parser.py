@@ -1,4 +1,4 @@
-from .services import get_physical_chemical_properties, get_h_numbers, get_product_name, get_CAS_weight, get_explosion_limits
+from .retrievers import get_physical_chemical_properties, get_h_numbers, get_product_name, get_CAS_weight, get_explosion_limits
 from .ppe_pages import get_ppe_page_nos, get_ppe_pages_base64
 
 import fitz
