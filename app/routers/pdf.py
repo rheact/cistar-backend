@@ -1,5 +1,5 @@
 import math
-from typing import Optional
+from typing import Optional, Union
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from models.sds import SDSExtraction
 from helpers.units import conversions
@@ -9,7 +9,7 @@ from services.sds.parser import parse
 router = APIRouter()
 
 @router.post('/pdf', response_model=SDSExtraction)
-async def file_upload(file: UploadFile = File(...), temperature: Optional[int]=None, unit: Optional[str]=None):
+async def file_upload(file: UploadFile = File(...), temperature: Optional[Union[int, str]]=None, unit: Optional[str]=None):
     """
     Extracts information from an SDS document.
     Temperature is required to caluclate Cp of the compound.
@@ -25,7 +25,7 @@ async def file_upload(file: UploadFile = File(...), temperature: Optional[int]=N
     cas_no = properties['casNo']
     
     # Calculate Cp
-    if temperature is None:
+    if temperature is None or temperature == 'None':
         properties['cp'] = ''
     else:
         if unit is None:

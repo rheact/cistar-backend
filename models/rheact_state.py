@@ -47,13 +47,13 @@ class OperatingParams(BaseModel):
     OperatingParams represent data used in calulation.
     """
     temperature: str
-    temperatureUnit: Optional[str]
+    temperatureUnit: str
     pressure: str
-    pressureUnit: Optional[str]
+    pressureUnit: str
     heatOfReaction: str
-    heatOfReactionUnit: Optional[str]
+    heatOfReactionUnit: str
     cp: Optional[str]
-    cpUnit: Optional[str]
+    cpUnit: str
     basis: Optional[BaseChemicalIndex]
     physicalState: Optional[str]
     reactionClass: Optional[str]

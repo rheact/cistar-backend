@@ -12,6 +12,10 @@ router = APIRouter()
 @router.post('/calculate', response_model=ReactionCalculation)
 def calculate(rstate: RheactState):
     operatingParams = rstate.operatingParams
+    assert operatingParams.temperature != '', "Temperature is missting"
+    assert operatingParams.pressure != '', "Pressure is missting"
+    assert operatingParams.heatOfReaction != '', "Heat of Reaction is missting"
+
     base = get_basis_chemical(rstate.compound, rstate.operatingParams.basis)
     baseMw = None
     if base is not None:
@@ -32,15 +36,16 @@ def calculate(rstate: RheactState):
         Cp = get_calculated_cp(rstate.compound)
     else:
         Cp = float(operatingParams.cp)
+        Cp = conversions.std_Cp(Cp, operatingParams.cpUnit, baseMw)
         # TODO: Unit conversions
 
     # Perform calculations
     cb = get_final_calculations(T, P, dH, Cp, base) 
 
     # Unstandardise units
-    cb.adiabaticTemp = conversions.unstd_T(cb.adiabaticTemp, operatingParams.temperatureUnit)
-    cb.finalTemp = conversions.unstd_T(cb.finalTemp, operatingParams.temperatureUnit)
-    cb.adiabaticPressure = conversions.unstd_P(cb.adiabaticPressure, operatingParams.pressureUnit)
+    cb.adiabaticTempDisplay = conversions.unstd_T(cb.adiabaticTemp, operatingParams.temperatureUnit)
+    cb.finalTempDisplay = conversions.unstd_T(cb.finalTemp, operatingParams.temperatureUnit)
+    cb.adiabaticPressureDisplay = conversions.unstd_P(cb.adiabaticPressure, operatingParams.pressureUnit)
     return cb
 
 @router.post('/graph', response_model=HMatrixColumn)
