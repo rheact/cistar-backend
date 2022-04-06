@@ -61,6 +61,14 @@ UNIT_MAP = {
             's': lambda v, _: (v*252.164)/453.592,
             'us': lambda v, _: (v*453.592)/252.164,
         },
+        'cal/mol': {
+            's': lambda v, mw: v/mw,
+            'us': lambda v, mw: v*mw,
+        },
+        'J/mol': {
+            's': lambda v, mw: (v/4.184)/mw,
+            'us': lambda v, mw: v*4.184*mw,
+        },
         'kcal/mol': {
             's': lambda v, mw: v*1000/mw,
             'us': lambda v, mw: v*mw/1000,

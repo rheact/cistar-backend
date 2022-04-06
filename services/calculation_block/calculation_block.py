@@ -60,7 +60,6 @@ def get_final_calculations(ini_T: float, ini_P: float, dH: float, Cp_mix: float,
     # ADIABATIC TEMPERATURE CHANGE
     # - Multiply heat of reaction by -1 for exo/endothermic reactions
     # - unit: degC
-    print(f"dH: {dH} Cp: {Cp_mix} X_i: {X_i}")
     ad_T = (-dH / Cp_mix) *  X_i
 
     # FINAL TEMPERATURE
