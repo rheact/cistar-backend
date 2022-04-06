@@ -1,4 +1,5 @@
 import pandas as pd
+from models import HMatrixColumn
 
 GREEN = '#7fd13b'
 YELLOW = '#ffff00'
@@ -11,7 +12,7 @@ COLORS = {0: GREEN, 2: YELLOW, 3: ORANGE, 4: RED}
 # number of "hazards" for each h-index
 NUM_HAZARDS = 11
 
-def max_h_plot(h_ids):
+def max_h_plot(h_ids) -> HMatrixColumn:
     # a list of the max h_nums in the plot
     max_h_nums = [0] * NUM_HAZARDS
     
@@ -38,7 +39,7 @@ def max_h_plot(h_ids):
         'other': COLORS[max_h_nums[9]],
         'ingestion': COLORS[max_h_nums[10]],
     }
-    return max_h_plot
+    return HMatrixColumn(**max_h_plot)
 
 # given a row in the hmatrix, if any of the indicators are greater than what's currently in the 
 # max_h_nums, this function will update the max plot to reflect the max indicator.

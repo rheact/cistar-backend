@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import pdf, results
 
@@ -20,3 +21,7 @@ async def root():
     return {
         "message": "I am live!",
     }
+
+@app.exception_handler(AssertionError)
+def assertions_handler(_, e):
+    return PlainTextResponse(str(e), status_code=400)

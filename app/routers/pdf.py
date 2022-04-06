@@ -2,13 +2,14 @@ import math
 from typing import Optional
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from models.sds import SDSExtraction
+from helpers.units import conversions
 from services.database import estimate_cp_from_database, extract_properties
 from services.sds.parser import parse
 
 router = APIRouter()
 
 @router.post('/pdf', response_model=SDSExtraction)
-async def file_upload(file: UploadFile = File(...), temperature: Optional[int]=None):
+async def file_upload(file: UploadFile = File(...), temperature: Optional[int]=None, unit: Optional[str]=None):
     """
     Extracts information from an SDS document.
     Temperature is required to caluclate Cp of the compound.
@@ -16,7 +17,6 @@ async def file_upload(file: UploadFile = File(...), temperature: Optional[int]=N
     """
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(400, "Uploaded file is not a PDF")
-
 
     # Parse pdf file
     properties = parse(await file.read())
@@ -28,8 +28,10 @@ async def file_upload(file: UploadFile = File(...), temperature: Optional[int]=N
     if temperature is None:
         properties['cp'] = ''
     else:
-        T = int(temperature)
-        #TODO: Standardise temperature
+        if unit is None:
+            raise HTTPException(400, "No unit passed for temperature")
+        T = float(temperature)
+        T = conversions.std_T(T, unit)
         properties['cp'] = estimate_cp_from_database(cas_no, T)
 
     # Parse properties from second database

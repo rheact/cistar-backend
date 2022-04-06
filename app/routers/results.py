@@ -1,54 +1,54 @@
 import math
-from fastapi import APIRouter, HTTPException
-from models import Equation, RheactState, ReactionCalculation
-from services.cameo.crawler import get_cameo
-from services.calculation_block import get_final_calculations, get_calculated_cp
-from services.cameo.model import CameoTable
-from services.hmatrix import max_h_plot, HMatrixColumn
+from fastapi import APIRouter
+from helpers.units import conversions
+from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, CameoTable
+from services.calculation_block.calculation_block import get_basis_molWtFraction
+from services.cameo import get_cameo
+from services.calculation_block import get_final_calculations, get_calculated_cp, get_basis_chemical
+from services.hmatrix import max_h_plot
 
 router = APIRouter()
 
 @router.post('/calculate', response_model=ReactionCalculation)
 def calculate(rstate: RheactState):
     operatingParams = rstate.operatingParams
+    base = get_basis_chemical(rstate.compound, rstate.operatingParams.basis)
+    baseMw = None
+    if base is not None:
+        baseMw = float(base.molWt)
 
-    d_h = float(operatingParams.heatOfReaction)
     T = float(operatingParams.temperature)
     P = float(operatingParams.pressure)
-    cp = math.nan
+    dH = float(operatingParams.heatOfReaction)
+
+    # Standardise units
+    T = conversions.std_T(T, operatingParams.temperatureUnit)
+    P = conversions.std_P(P, operatingParams.pressureUnit)
+    dH = conversions.std_dH(dH, operatingParams.heatOfReactionUnit, baseMw)
 
     # If user has not provided Cp mix, then we calculate based on mol fractions and individual Cps
+    Cp = math.nan
     if operatingParams.cp == '' or operatingParams.cp == None:
-        cp = get_calculated_cp(rstate.compound)
+        Cp = get_calculated_cp(rstate.compound)
     else:
-        cp = float(operatingParams.cp)
+        Cp = float(operatingParams.cp)
+        # TODO: Unit conversions
 
-    # TODO: Standardise units
-    # TODO: This is done by checking the rstate unit configurations
+    # Perform calculations
+    cb = get_final_calculations(T, P, dH, Cp, base) 
 
-    calculation_block = get_final_calculations(T, P, d_h, cp, rstate.operatingParams.basis, rstate.compound)
-
-    # TODO: Unstandardise units
-    # TODO: This is reverse transformation of above steps
-
-    return calculation_block
+    # Unstandardise units
+    cb.adiabaticTemp = conversions.unstd_T(cb.adiabaticTemp, operatingParams.temperatureUnit)
+    cb.finalTemp = conversions.unstd_T(cb.finalTemp, operatingParams.temperatureUnit)
+    cb.adiabaticPressure = conversions.unstd_P(cb.adiabaticPressure, operatingParams.pressureUnit)
+    return cb
 
 @router.post('/graph', response_model=HMatrixColumn)
 def matrix(hnums: str):
-    try:
-        return max_h_plot(hnums)
-    except Exception as e:
-        raise HTTPException(500, 'Unable to create H-Matrix: ' + str(e))
+    return max_h_plot(hnums)
 
 @router.post('/cameo', response_model=CameoTable)
-def cameo(compound: Equation):
-    data = list()
-    for cls in [compound.reactants, compound.products, compound.diluents]:
-        for c in cls:
-            data.append(c)
-    
-    try:
-        response = get_cameo(data)
-        return response
-    except Exception as e:
-        raise HTTPException(500, 'Unable to create Cameo Table: ' + str(e))
+def cameo(equation: Equation):
+    data = [*equation.reactants, *equation.products, *equation.diluents]
+    response = get_cameo(data)
+    return response

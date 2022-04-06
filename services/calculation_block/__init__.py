@@ -1,1 +1,1 @@
-from .calculation_block import get_final_calculations, get_calculated_cp
+from .calculation_block import get_final_calculations, get_calculated_cp, get_basis_chemical

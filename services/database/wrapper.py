@@ -90,7 +90,7 @@ def extract_properties(cas) -> dict:
     properties['lowerExplosionLim'] = __extract_lower_explosion_limit(row)
     return properties
 
-def estimate_cp_from_database(cas: str, T: str) -> Union[float, str]:
+def estimate_cp_from_database(cas: str, celcius_T: str) -> Union[float, str]:
     """
     Estimates the cp for the chemical with the given cas
     at the given temperature (in degrees celsius)
@@ -100,11 +100,12 @@ def estimate_cp_from_database(cas: str, T: str) -> Union[float, str]:
     """
     row = get_row(cas)
 
-    if row is False:
+    if row is None:
         return ''
     
     # T will be a string, convert to int
-    temp = float(T)
+    # This is in Celcius!!
+    temp = int(celcius_T)
     if math.isnan(temp) is True:
         raise Exception
     

@@ -54,7 +54,7 @@ class OperatingParams(BaseModel):
     heatOfReactionUnit: Optional[str]
     cp: Optional[str]
     cpUnit: Optional[str]
-    basis: BaseChemicalIndex
+    basis: Optional[BaseChemicalIndex]
     physicalState: Optional[str]
     reactionClass: Optional[str]
     reactionScale: Optional[str]
