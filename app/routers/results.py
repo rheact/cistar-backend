@@ -43,9 +43,9 @@ def calculate(rstate: RheactState):
     cb = get_final_calculations(T, P, dH, Cp, base) 
 
     # Unstandardise units
-    cb.adiabaticTempDisplay = conversions.unstd_T(cb.adiabaticTemp, operatingParams.temperatureUnit)
-    cb.finalTempDisplay = conversions.unstd_T(cb.finalTemp, operatingParams.temperatureUnit)
-    cb.adiabaticPressureDisplay = conversions.unstd_P(cb.adiabaticPressure, operatingParams.pressureUnit)
+    cb['adiabaticTempDisplay'] = conversions.unstd_T(cb['adiabaticTemp'], operatingParams.temperatureUnit)
+    cb['finalTempDisplay'] = conversions.unstd_T(cb['finalTemp'], operatingParams.temperatureUnit)
+    cb['adiabaticPressureDisplay'] = conversions.unstd_P(cb['adiabaticPressure'], operatingParams.pressureUnit)
     return cb
 
 @router.post('/graph', response_model=HMatrixColumn)
