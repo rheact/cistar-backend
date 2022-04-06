@@ -1,3 +1,6 @@
+# s means convert this unit to standard
+# us means convert standard to this unit
+
 UNIT_MAP = {
     'T': {
         '°C': {
@@ -5,12 +8,14 @@ UNIT_MAP = {
             'us': lambda v: v,
         },
         '°F': {
-            's': lambda v: (9*v/5)+32,
-            'us': lambda v: (v-32)*5/9,
+            # f to c
+            's': lambda v: (v-32)*5/9,
+            # c to f
+            'us': lambda v: (9*v/5)+32,
         },
         'K': {
-            's': lambda v: v+273.15,
-            'us': lambda v: v-273.15,
+            's': lambda v: v-273.15,
+            'us': lambda v: v+273.15,
         },
     },
     'P': {
