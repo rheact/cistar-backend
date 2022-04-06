@@ -77,7 +77,7 @@ def get_final_calculations(ini_T: float, ini_P: float, dH: float, Cp_mix: float,
         'adiabaticPressure': ad_P, 
     }
 
-    return ReactionCalculation(**calcs)
+    return **calcs
     
 
 def get_calculated_cp(equation: Equation) -> float:
