@@ -53,29 +53,33 @@ UNIT_MAP = {
             's': lambda v, _: v*1000,
             'us': lambda v, _: v*1000,
         },
+        'J/g': {
+            's': lambda v, _: (v/4.184),
+            'us': lambda v, _: v*4.184,
+        },
         'kJ/g': {
             's': lambda v, _: (v/4.184)*1000,
             'us': lambda v, _: (v/1000)*4.184,
-        },
-        'btu/lb': {
-            's': lambda v, _: (v*252.164)/453.592,
-            'us': lambda v, _: (v*453.592)/252.164,
         },
         'cal/mol': {
             's': lambda v, mw: v/mw,
             'us': lambda v, mw: v*mw,
         },
-        'J/mol': {
-            's': lambda v, mw: (v/4.184)/mw,
-            'us': lambda v, mw: v*4.184*mw,
-        },
         'kcal/mol': {
             's': lambda v, mw: v*1000/mw,
             'us': lambda v, mw: v*mw/1000,
         },
+        'J/mol': {
+            's': lambda v, mw: (v/4.184)/mw,
+            'us': lambda v, mw: v*4.184*mw,
+        },
         'kJ/mol': {
             's': lambda v, mw: (v/4.184)*1000/mw,
             'us': lambda v, mw: (v*4.184*mw)/1000,
+        },
+        'btu/lb': {
+            's': lambda v, _: (v*252.164)/453.592,
+            'us': lambda v, _: (v*453.592)/252.164,
         },
     },
     'Cp': {
@@ -86,6 +90,10 @@ UNIT_MAP = {
         'kcal/g/°C': {
             's': lambda v, _: v*1000,
             'us': lambda v, _: v/1000,
+        },
+        'J/g/°C': {
+            's': lambda v, _: (v/4.184),
+            'us': lambda v, _: v*4.184,
         },
         'kJ/g/°C': {
             's': lambda v, _: (v/4.184)*1000,

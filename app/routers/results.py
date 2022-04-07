@@ -1,8 +1,7 @@
 import math
 from fastapi import APIRouter
-from helpers.units import conversions
+import helpers.units.conversions as U
 from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, CameoTable
-from services.calculation_block.calculation_block import get_basis_molWtFraction
 from services.cameo import get_cameo
 from services.calculation_block import get_final_calculations, get_calculated_cp, get_basis_chemical
 from services.hmatrix import max_h_plot
@@ -11,42 +10,52 @@ router = APIRouter()
 
 @router.post('/calculate', response_model=ReactionCalculation)
 def calculate(rstate: RheactState):
-    operatingParams = rstate.operatingParams
-    assert operatingParams.temperature != '', "Temperature is missting"
-    assert operatingParams.pressure != '', "Pressure is missting"
-    assert operatingParams.heatOfReaction != '', "Heat of Reaction is missting"
+    params = rstate.operatingParams
+    assert params.temperature != '', "Temperature is missting"
+    assert params.pressure != '', "Pressure is missting"
+    assert params.heatOfReaction != '', "Heat of Reaction is missting"
 
     base = get_basis_chemical(rstate.compound, rstate.operatingParams.basis)
     baseMw = None
     if base is not None:
         baseMw = float(base.molWt)
 
-    T = float(operatingParams.temperature)
-    P = float(operatingParams.pressure)
-    dH = float(operatingParams.heatOfReaction)
+    T = float(params.temperature)
+    P = float(params.pressure)
+    dH = float(params.heatOfReaction)
 
     # Standardise units
-    T = conversions.std_T(T, operatingParams.temperatureUnit)
-    P = conversions.std_P(P, operatingParams.pressureUnit)
-    dH = conversions.std_dH(dH, operatingParams.heatOfReactionUnit, baseMw)
+    T = U.std_T(T, params.temperatureUnit)
+    P = U.std_P(P, params.pressureUnit)
+    dH = U.std_dH(dH, params.heatOfReactionUnit, baseMw)
 
     # If user has not provided Cp mix, then we calculate based on mol fractions and individual Cps
     Cp = math.nan
-    if operatingParams.cp == '' or operatingParams.cp == None:
+    if params.cp == '' or params.cp == None:
         Cp = get_calculated_cp(rstate.compound)
     else:
-        Cp = float(operatingParams.cp)
-        Cp = conversions.std_Cp(Cp, operatingParams.cpUnit, baseMw)
-        # TODO: Unit conversions
+        Cp = float(params.cp)
+        Cp = U.std_Cp(Cp, params.cpUnit, baseMw)
 
     # Perform calculations
-    cb = get_final_calculations(T, P, dH, Cp, base) 
+    res = get_final_calculations(T, P, dH, Cp, base) 
+    
+    # Display strings of results
+    display_final_T = round(U.unstd_T(res.finalTemp, params.temperatureUnit), 3)
+    res.finalTempDisplay = f"{display_final_T} {params.temperatureUnit}"
 
-    # Unstandardise units
-    cb['adiabaticTempDisplay'] = conversions.unstd_T(cb['adiabaticTemp'], operatingParams.temperatureUnit)
-    cb['finalTempDisplay'] = conversions.unstd_T(cb['finalTemp'], operatingParams.temperatureUnit)
-    cb['adiabaticPressureDisplay'] = conversions.unstd_P(cb['adiabaticPressure'], operatingParams.pressureUnit)
-    return cb
+    display_ad_P = round(U.unstd_P(res.adiabaticPressure, params.pressureUnit), 3)
+    res.adiabaticPressureDisplay = f"{display_ad_P} {params.pressureUnit}"
+
+    if params.temperatureUnit == '°F':
+        display_ad_T = 1.8 * res.adiabaticTemp
+    else:
+        display_ad_T = res.adiabaticTemp
+    display_ad_T = round(display_ad_T, 3)
+    
+    res.adiabaticTempDisplay = f"{display_ad_T} {params.temperatureUnit}"
+
+    return res
 
 @router.post('/graph', response_model=HMatrixColumn)
 def matrix(hnums: str):

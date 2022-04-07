@@ -3,18 +3,35 @@ RHEACT JSON v3 STANDARD
 Drafted by: Vikrant Gajria
 """
 
-from numpy import number
 from pydantic import BaseModel
 from typing import List, Optional, Any
 
-from models.sds import SDSExtraction
-
-class Chemical(SDSExtraction):
+class Chemical(BaseModel):
     """
     Chemical represents data extracted from SDS,
     Plus the molecular weight fraction added by user.
     """
-    molWtFraction: Optional[str]
+    productName: str
+    molWt: str
+    casNo: str
+    ph: str
+    boilingPt: str
+    flashPt: str
+    vapourPressure: str
+    vapourDensity: str
+    relDensity: str
+    autoIgnitionTemp: str
+    decompositionTemp: str
+    viscosity: str
+    upperExplosionLim: str
+    lowerExplosionLim: str
+    hNumbers: str
+    hStatements: Optional[str]
+    cp: str
+    ppe_pages: Optional[Any]
+    ppe_pagerange: Optional[List[int]]
+    molWtFraction: str = ''
+    neglected: bool = False
 
 class BaseChemicalIndex(BaseModel):
     """

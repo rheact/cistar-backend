@@ -1,14 +1,14 @@
 import math
 from typing import Optional, Union
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from models.sds import SDSExtraction
+from models import Chemical
 from helpers.units import conversions
 from services.database import estimate_cp_from_database, extract_properties
 from services.sds.parser import parse
 
 router = APIRouter()
 
-@router.post('/pdf', response_model=SDSExtraction)
+@router.post('/pdf', response_model=Chemical)
 async def file_upload(file: UploadFile = File(...), temperature: Optional[Union[int, str]]=None, unit: Optional[str]=None):
     """
     Extracts information from an SDS document.
