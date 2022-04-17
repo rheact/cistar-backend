@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
+
+from helpers.errors import InputDataError
 from .routers import pdf, results
 
 app = FastAPI()
@@ -23,5 +25,6 @@ async def root():
     }
 
 @app.exception_handler(AssertionError)
+@app.exception_handler(InputDataError)
 def assertions_handler(_, e):
     return PlainTextResponse(str(e), status_code=400)

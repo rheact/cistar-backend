@@ -1,6 +1,7 @@
 import math
 from typing import Optional, Union
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, UploadFile, File
+from helpers.errors import InputDataError
 from models import Chemical
 from helpers.units import conversions
 from services.database import estimate_cp_from_database, extract_properties
@@ -16,7 +17,7 @@ async def file_upload(file: UploadFile = File(...), temperature: Optional[Union[
     Only Sigma-Aldrich SDS are allowed at the moment.
     """
     if not file.filename.lower().endswith('.pdf'):
-        raise HTTPException(400, "Uploaded file is not a PDF")
+        raise InputDataError("Uploaded file is not a PDF")
 
     # Parse pdf file
     properties = parse(await file.read())
@@ -29,9 +30,10 @@ async def file_upload(file: UploadFile = File(...), temperature: Optional[Union[
         properties['cp'] = ''
     else:
         if unit is None:
-            raise HTTPException(400, "No unit passed for temperature")
+            raise InputDataError("No unit passed for temperature")
         T = float(temperature)
         T = conversions.std_T(T, unit)
+        assert T >= -273.15, "Temperature is below absolute zero!"
         properties['cp'] = estimate_cp_from_database(cas_no, T)
 
     # Parse properties from second database

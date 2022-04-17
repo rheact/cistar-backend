@@ -1,6 +1,6 @@
 import math
-from fastapi import APIRouter
 import helpers.units.conversions as U
+from fastapi import APIRouter
 from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, CameoTable
 from services.cameo import get_cameo
 from services.calculation_block import get_final_calculations, get_calculated_cp, get_basis_chemical
@@ -26,6 +26,7 @@ def calculate(rstate: RheactState):
 
     # Standardise units
     T = U.std_T(T, params.temperatureUnit)
+    assert T >= -273.15, "Temperature is absolute zero!"
     P = U.std_P(P, params.pressureUnit)
     dH = U.std_dH(dH, params.heatOfReactionUnit, baseMw)
 
@@ -36,6 +37,7 @@ def calculate(rstate: RheactState):
     else:
         Cp = float(params.cp)
         Cp = U.std_Cp(Cp, params.cpUnit, baseMw)
+    assert Cp > 0, f"Cp mix is should be non-zero, non-negative! Standardised Cp mix is {Cp} cal/g/degC."
 
     # Perform calculations
     res = get_final_calculations(T, P, dH, Cp, base) 
