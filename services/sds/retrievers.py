@@ -40,10 +40,9 @@ def get_physical_chemical_properties(text):
         'Viscosity '
     ]
 
-    properties =[''] * len(letters)
+    properties = [''] * len(letters)
 
-    for i in range(len(letters)):
-        letter = letters[i]
+    for i, letter in enumerate(letters):
         next_letter = chr(ord(letter) + 1)
         # get all data between 2 letters [letter1]) and [letter2])
         regex = r"" + letter + "\)" + ".+" + next_letter + "\)"
@@ -70,13 +69,13 @@ def get_physical_chemical_properties(text):
         else:
             # attempt to remove units from property
             try:
-                property = re.search(r"[\d\.]+", property).group()
+                property = re.search(r"[\d\.,]+", property).group()
+                property = property.replace(',','')
             except:
                 property = 'No data available'
 
         properties[i] = property
         
-    
     return properties
 
 def get_h_numbers(text):
