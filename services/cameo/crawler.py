@@ -75,7 +75,7 @@ def get_cameo(compounds: List[Chemical]):
         __search_by_cmpd(cmpd_name, driver)
         if find_txt('No matches were found', driver.page_source):
 
-            __new_search_button()
+            __new_search_button(driver)
             __search_by_casid(cas_id, driver)
             
             # Check if CAS-ID parsed is proper or not 
