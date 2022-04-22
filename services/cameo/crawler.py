@@ -6,26 +6,22 @@ import re
 
 from models.rheact_state import Chemical
 
-driver = None
-
 # sometimes the name of a compound cameo finds is different than the name the user inputs
 # so this data structure will hold
 # cas_id : name pairs so we can look up the proper name later and replace it.
 cameo_names = {}
 
-def init_driver():
-    global driver
-    
+def __get_driver():
     # These options will speed up futher: 
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--disable-gpu")
     # chrome_options.add_argument("--no-sandbox") # linux only
-
     driver = webdriver.Chrome(options=chrome_options)
+    return driver
 
-def search_by_cmpd(cmpd_name):
+def __search_by_cmpd(cmpd_name, driver):
     #Find the 'Name (not case sensitive)' using Compound name 
     cmpd_name_input = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[1]/input[1]')
     
@@ -36,7 +32,7 @@ def search_by_cmpd(cmpd_name):
     search_cmpd_btn = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[1]/input[2]')
     search_cmpd_btn.click()
 
-def search_by_casid(cas_id):
+def __search_by_casid(cas_id, driver):
     #Find the 'CAS NUMBER dialog box by xpath'
     cas_number_input = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[2]/input[1]')
     
@@ -47,11 +43,11 @@ def search_by_casid(cas_id):
     search_cas_btn = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[2]/input[2]')
     search_cas_btn.click()
 
-def new_search_button():
+def __new_search_button(driver):
     new_search_btn = driver.find_element_by_xpath('/html/body/div[1]/a[3]')
     new_search_btn.click()
 
-def add_chemical(cas_id):
+def __add_chemical(cas_id, driver):
     # add the cas_id : name pair to names data structure
     name = add_to_chemical_btn = driver.find_element_by_xpath('/html/body/div[2]/div[2]/div[2]/a')
     cameo_names[cas_id] = name.text
@@ -65,6 +61,7 @@ def find_txt(string_to_find, src):
     return re.search(r'{}'.format(string_to_find), src)
 
 def get_cameo(compounds: List[Chemical]):
+    driver = __get_driver()
     driver.get('https://cameochemicals.noaa.gov/search/simple')
     
     # will want to return html element and errors, if any
@@ -75,35 +72,35 @@ def get_cameo(compounds: List[Chemical]):
         cmpd_name = cmpd.productName
         cas_id = cmpd.casNo
         
-        search_by_cmpd(cmpd_name)
+        __search_by_cmpd(cmpd_name, driver)
         if find_txt('No matches were found', driver.page_source):
 
-            new_search_button()
-            search_by_casid(cas_id)
+            __new_search_button()
+            __search_by_casid(cas_id, driver)
             
             # Check if CAS-ID parsed is proper or not 
             try: 
                 print('CAS-ID {} for compound {} is invalid, skipping'.format(cas_id, cmpd_name))
                 driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[2]/span')
-                new_search_button()
+                __new_search_button(driver)
                 continue 
             except: 
                 # Check if CAS-ID is found in the dataset 
                 if find_txt('No matches were found', driver.page_source):
                     #Print this out in the dialog box 
                     print('{} with CAS-ID: {} not found in the Cameo dataset'.format(cmpd_name, cas_id))
-                    new_search_button()
+                    __new_search_button(driver)
                 else:
                     print('Match found for {} with CAS-ID: {}, added to the data using CAS-ID'.format(cmpd_name, cas_id))
-                    add_chemical(cas_id)
+                    __add_chemical(cas_id, driver)
 
         elif find_txt(cas_id, driver.page_source):
-            add_chemical(cas_id)
+            __add_chemical(cas_id, driver)
         else:
             print('partial match found for {}, not added to the data'.format(cmpd_name))
             errors.append('partial match found for {}, not added to the data'.format(cmpd_name))
 
-        new_search_button()
+        __new_search_button(driver)
 
     try:
         predict_react_btn = driver.find_element_by_xpath('/html/body/div[1]/a[7]')
@@ -124,6 +121,8 @@ def get_cameo(compounds: List[Chemical]):
             html_element = html_element.replace(cameo_names[compound['casNo']], compound['productName'])
         except:
             pass
+
+    driver.close()
 
     return {
         'html_element': html_element,
