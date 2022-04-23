@@ -32,5 +32,8 @@ def get_basis_molWtFraction(base: Chemical) -> float:
 
     if X_i > 1:
         raise InputDataError(f'Mol wt fraction of {base.productName} is greater than 1: {base.molWtFraction}')
+
+    if X_i <= 0:
+        raise InputDataError(f'Mol wt fraction of {base.productName} is less than or equal to 0: {base.molWtFraction}')
     
     return X_i
