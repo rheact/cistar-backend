@@ -135,10 +135,16 @@ def get_CAS_weight(text):
     """
     # Section 3 - composition/information on ingredients
     cprop = re.search(r"COMPOSITION.+FIRST", text, re.DOTALL|re.IGNORECASE).group() #for maol. wt and CAS number
-    num = re.search(r"\d+-\d{2}-\d", cprop, re.DOTALL).group()
-    num = num.replace('\n', '') # Remove newlines
+    cas_num = "UNKOWN"
+    s = re.search(r"(\d+-\d{2}-\d)", cprop, re.DOTALL)
+    if s is not None:
+        cas_num = s.group(1)
+        cas_num = cas_num.replace('\n', '') # Remove newlines
 
     # Mol wt.
-    weight = re.search(r"(\d+\.\d+) g/mol", cprop).group(1) 
-    return num, weight
+    weight = "UNKNOWN"
+    s = re.search(r"(\d+\.\d+) g/mol", cprop)
+    if s is not None:
+        weight = s.group(1)
+    return cas_num, weight
 
