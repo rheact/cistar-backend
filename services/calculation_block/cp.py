@@ -21,7 +21,7 @@ def get_calculated_cp(equation: Equation) -> float:
 
         try: cp_j = float(component.cp)
         except ValueError: raise InputDataError(f"Cp is not numeric for {component.productName}")
-        assert cp_j > 0, f"Cp must be non-zero, non-positive! Error for {component.productName}"
+        assert cp_j > 0, f"Component heat capacities are required to be greater than zero. Error for {component.productName}."
 
         try: X_j = float(component.molWtFraction)
         except ValueError: raise InputDataError(f"molWtFraction is not numeric for {component.productName}")

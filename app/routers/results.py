@@ -11,14 +11,17 @@ router = APIRouter()
 @router.post('/calculate', response_model=ReactionCalculation)
 def calculate(rstate: RheactState):
     params = rstate.operatingParams
-    assert params.temperature != '', "Temperature is missting"
-    assert params.pressure != '', "Pressure is missting"
-    assert params.heatOfReaction != '', "Heat of Reaction is missting"
+    assert params.temperature != '', "Temperature is missing"
+    assert params.pressure != '', "Pressure is missing"
+    assert params.heatOfReaction != '', "Heat of Reaction is missing"
 
     base = get_basis_chemical(rstate.compound, rstate.operatingParams.basis)
     baseMw = None
     if base is not None:
-        baseMw = float(base.molWt)
+        try:
+            baseMw = float(base.molWt)
+        except ValueError:
+            raise AssertionError(f"Molecular weight of for {base.productName} heat of reaction is not a number. ")
 
     T = float(params.temperature)
     P = float(params.pressure)
@@ -26,7 +29,7 @@ def calculate(rstate: RheactState):
 
     # Standardise units
     T = U.std_T(T, params.temperatureUnit)
-    assert T >= -273.15, "Temperature is absolute zero!"
+    assert T > -273.15, "Temperature is absolute zero!"
     P = U.std_P(P, params.pressureUnit)
     dH = U.std_dH(dH, params.heatOfReactionUnit, baseMw)
 
@@ -37,7 +40,7 @@ def calculate(rstate: RheactState):
     else:
         Cp = float(params.cp)
         Cp = U.std_Cp(Cp, params.cpUnit, baseMw)
-    assert Cp > 0, f"Cp mix is should be non-zero, non-negative! Standardised Cp mix is {Cp} cal/g/degC."
+    assert Cp > 0, f"Mixture heat capacity is required to be greater than zero. The current value is {Cp} cal/g/C"
 
     # Perform calculations
     res = get_final_calculations(T, P, dH, Cp, base) 

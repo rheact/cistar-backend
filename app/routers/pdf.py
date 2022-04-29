@@ -33,7 +33,7 @@ async def file_upload(file: UploadFile = File(...), temperature: Optional[Union[
             raise InputDataError("No unit passed for temperature")
         T = float(temperature)
         T = conversions.std_T(T, unit)
-        assert T >= -273.15, "Temperature is below absolute zero!"
+        assert T > -273.15, "Temperature is absolute zero!"
         properties['cp'] = estimate_cp_from_database(cas_no, T)
 
     # Parse properties from second database
