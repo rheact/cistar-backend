@@ -1,19 +1,16 @@
 import math
-from typing import Optional, Union
 from fastapi import APIRouter, UploadFile, File
 from helpers.errors import InputDataError
 from models import Chemical
-from helpers.units import conversions
-from services.database import estimate_cp_from_database, extract_properties
+from services.database import extract_properties
 from services.sds.parser import parse
 
 router = APIRouter()
 
 @router.post('/pdf', response_model=Chemical)
-async def file_upload(file: UploadFile = File(...), temperature: Optional[Union[int, str]]=None, unit: Optional[str]=None):
+async def file_upload(file: UploadFile = File(...)):
     """
     Extracts information from an SDS document.
-    Temperature is required to caluclate Cp of the compound.
     Only Sigma-Aldrich SDS are allowed at the moment.
     """
     if not file.filename.lower().endswith('.pdf'):
@@ -23,35 +20,18 @@ async def file_upload(file: UploadFile = File(...), temperature: Optional[Union[
     properties = parse(await file.read())
 
     # Retrive CAS no from PDF
-    cas_no = properties['casNo']
-    
-    # Calculate Cp
-    if temperature is None or temperature == 'None':
-        properties['cp'] = ''
-    else:
-        if unit is None:
-            raise InputDataError("No unit passed for temperature")
-        T = float(temperature)
-        T = conversions.std_T(T, unit)
-        assert T > -273.15, "Temperature is absolute zero!"
-        properties['cp'] = estimate_cp_from_database(cas_no, T)
+    cas_no = properties.casNo
 
     # Parse properties from second database
     additional_properties = extract_properties(cas_no)
-    coerce_properties(properties, additional_properties)
+
+    # If a property was not contained in the SDS and retreived with parse(),
+    # however does exist in the second database,
+    # we'll replace that value in properties with the value from the second database
+    for prop in ['boilingPt', 'flashPt', 'autoIgnitionTemp', 'upperExplosionLim', 'lowerExplosionLim']:
+        if properties.__getattribute__(prop) == 'No data available' and prop in additional_properties and not math.isnan(additional_properties[prop]):
+            properties.__setattr__(prop, additional_properties[prop])
 
     # Close file
     await file.close()
-    
     return properties
-
-def coerce_properties(properties, additional_properties):
-    """
-    If a property was not contained in the SDS and retreived with parse(),
-    however does exist in the second database,
-    we'll replace that value in properties with the value from the second database
-    """
-    props = ['boilingPt', 'flashPt', 'autoIgnitionTemp', 'upperExplosionLim', 'lowerExplosionLim']
-    for prop in props:
-        if properties[prop] == 'No data available' and prop in additional_properties and not math.isnan(additional_properties[prop]):
-            properties[prop] = additional_properties[prop]

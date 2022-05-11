@@ -3,7 +3,7 @@ from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from helpers.errors import InputDataError
-from .routers import pdf, results
+from .routers import pdf, results, actions
 
 app = FastAPI()
 app.add_middleware(
@@ -16,6 +16,7 @@ app.add_middleware(
 
 app.include_router(pdf.router)
 app.include_router(results.router)
+app.include_router(actions.router)
 
 @app.get("/")
 async def root():

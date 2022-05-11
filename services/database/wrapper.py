@@ -4,19 +4,7 @@ from typing import Union
 import pandas as pd
 import math
 
-""" Relevant column numbers in chem_table.xlsx """
-COLUMNS = {
-    'CHEMICAL': 0,
-    'CAS': 1,
-    'BOILING_PT': 27,
-    'MELTING_PT': 28,
-    'FLASH_PT': 34,
-    'UEL': 35, # do these exist ?
-    'LEL': 36,
-    'AUTO_IGNITON_TEMP': 37,
-    'LIQCP_A': 47,
-    'LIQCP_B': 48,
-}
+from helpers.errors import InputDataError
     
 df = pd.read_excel("data/chem_table.xlsx")
 
@@ -25,42 +13,10 @@ def get_row(cas):
     Sees if the chemical with a given cas exists in the table.
     returns the row if it does otherwise returns None 
     """
-    row = df.loc[df['CAS Number'] == cas].to_numpy()
+    row = df[df['CAS Number'] == cas]
     if len(row) == 0:
         return None
-    return row[0]
-
-def __extract_boiling_pt(row):
-    return row[COLUMNS['BOILING_PT']]
-
-def __extract_melting_pt(row):
-    return row[COLUMNS['MELTING_PT']]
-
-def __extract_flash_pt(row):
-    return row[COLUMNS['FLASH_PT']]
-
-def __extract_upper_explosion_limit(row):
-    return row[COLUMNS['UEL']]
-
-def __extract_lower_explosion_limit(row):
-    return row[COLUMNS['LEL']]
-
-def __extract_auto_ignition_temp(row):
-    return row[COLUMNS['AUTO_IGNITON_TEMP']]
-
-def __estimate_cp_of_chemical(row, kelvin_T) -> float:
-    """
-    Estimates the cp of a compound given the corresponding
-    row from chem_table.xlsx and a temperature according to the formula:
-    cp = A + BT
-    where A is the LiqCp_A entry in row,
-          B is the LiqCp_B entry in row,
-          T is the temperature in kelvin.
-    Used only when it is known that the chemical exists in the table
-    """
-    liqCp_A = row[COLUMNS['LIQCP_A']]
-    liqCp_B = row[COLUMNS['LIQCP_B']]
-    return liqCp_A + liqCp_B * kelvin_T
+    return row
 
 def extract_properties(cas) -> dict:
     """
@@ -82,12 +38,12 @@ def extract_properties(cas) -> dict:
     if row is None:
         return properties
     
-    properties['boilingPt'] = __extract_boiling_pt(row)
-    properties['meltingPt'] = __extract_melting_pt(row)
-    properties['flashPt'] = __extract_flash_pt(row)
-    properties['autoIgnitionTemp'] = __extract_auto_ignition_temp(row)
-    properties['upperExplosionLim'] = __extract_upper_explosion_limit(row)
-    properties['lowerExplosionLim'] = __extract_lower_explosion_limit(row)
+    properties['boilingPt'] = row['Boiling\nPoint\n(deg C)']
+    properties['meltingPt'] = row['Melting\nPoint\n(deg C)']
+    properties['flashPt'] = row['Flash\nPoint\n(deg C)']
+    properties['autoIgnitionTemp'] = row['Autoignition Temp\n(deg C)']
+    properties['upperExplosionLim'] = row['LFL\n(vol %)']
+    properties['lowerExplosionLim'] = row['UFL (vol %)']
     return properties
 
 def estimate_cp_from_database(cas: str, celcius_T: str) -> Union[float, str]:
@@ -98,16 +54,19 @@ def estimate_cp_from_database(cas: str, celcius_T: str) -> Union[float, str]:
     If the CAS does not exist in the table it will return the empty string
     (because the user must input the cp later)
     """
-    row = get_row(cas)
+    # T will be a string, convert to int
+    celcius_T = float(celcius_T)
+    if math.isnan(celcius_T) is True:
+        raise InputDataError("Temperature is not a number")
 
+    row = get_row(cas)
     if row is None:
         return ''
     
-    # T will be a string, convert to int
-    # This is in Celcius!!
-    temp = int(celcius_T)
-    if math.isnan(temp) is True:
-        raise Exception
-    
-    # TODO: Kelvin
-    return __estimate_cp_of_chemical(row, temp + 273.15)
+    # cp = A + BT
+    # where A is the LiqCp_A entry in row,
+    #       B is the LiqCp_B entry in row,
+    #       T is the temperature in celcius.
+    liqCp_A = float(row['Liq Cp\n(cal/g-C)\nA Coeff'])
+    liqCp_B = float(row['Liq Cp\n(cal/g-C)\nB Coeff'])
+    return liqCp_A + liqCp_B * celcius_T
