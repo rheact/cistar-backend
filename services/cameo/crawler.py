@@ -1,5 +1,5 @@
 from typing import List
-from selenium import webdriver 
+import chromedriver_binary
 from selenium import webdriver 
 from selenium.webdriver.chrome.options import Options
 import re

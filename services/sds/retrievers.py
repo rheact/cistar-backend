@@ -52,14 +52,19 @@ def get_physical_chemical_properties(text):
             next_letter = '9.2'
 
         property = re.search(regex, phys_chem, re.DOTALL).group()
+
         # all of these start with [a])\n \n - 5 chars
         property = property[5:]
+
         # remove new lines
         property = property.replace('\n', '')
+
         # remove extraneous spaces
         property = " ".join(property.split())
+
         # remove the property name so the first thing is just the value
         property = property.replace(idx[i], '')
+
         # take from start of substring until [next_letter])
         property = property[0: property.find(next_letter + ')')]
         
@@ -69,7 +74,7 @@ def get_physical_chemical_properties(text):
         else:
             # attempt to remove units from property
             try:
-                property = re.search(r"[\d\.,]+", property).group()
+                property = re.search(r"-?[\d\.,]+", property).group()
                 property = property.replace(',','')
             except:
                 property = 'No data available'

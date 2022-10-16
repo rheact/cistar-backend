@@ -11,6 +11,7 @@ router = APIRouter()
 @router.post('/calculate', response_model=ReactionCalculation)
 def calculate(rstate: RheactState):
     params = rstate.operatingParams
+
     assert params.temperature != '', "Temperature is missing"
     assert params.pressure != '', "Pressure is missing"
     assert params.heatOfReaction != '', "Heat of Reaction is missing"
@@ -36,7 +37,7 @@ def calculate(rstate: RheactState):
     # If user has not provided Cp mix, then we calculate based on mol fractions and individual Cps
     Cp = math.nan
     if params.cp == '' or params.cp == None:
-        Cp = get_calculated_cp(rstate.compound)
+        Cp = get_calculated_cp(rstate.compound, base)
     else:
         Cp = float(params.cp)
         Cp = U.std_Cp(Cp, params.cpUnit, baseMw)

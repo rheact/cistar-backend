@@ -28,12 +28,12 @@ def get_basis_molWtFraction(base: Chemical) -> float:
     try:
         X_i = float(base.molWtFraction)
     except TypeError:
-        raise InputDataError(f'Mol wt fraction of {base.productName} is not a float: {base.molWtFraction}')
+        raise InputDataError(f'Mass fraction of {base.productName} shoule be a float: {base.molWtFraction} was given')
 
     if X_i > 1:
-        raise InputDataError(f'Mol wt fraction of {base.productName} is greater than 1: {base.molWtFraction}')
+        raise InputDataError(f'Mass fraction of {base.productName} shoule not exceed 1: {base.molWtFraction} was given')
 
     if X_i <= 0:
-        raise InputDataError(f'Mol wt fraction of {base.productName} is less than or equal to 0: {base.molWtFraction}')
+        raise InputDataError(f'Mass fraction of {base.productName} should be greater than 0: {base.molWtFraction} was given')
     
     return X_i
