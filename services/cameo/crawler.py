@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.options import Options
 import re
 
 from models.rheact_state import Chemical
+from helpers.errors import ScraperError
 
 # sometimes the name of a compound cameo finds is different than the name the user inputs
 # so this data structure will hold
@@ -23,10 +24,10 @@ def __get_driver():
 def __search_by_cmpd(cmpd_name, driver):
     #Find the 'Name (not case sensitive)' using Compound name 
     cmpd_name_input = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[1]/input[1]')
-    
+
     #Send compound name keys to the compound name field 
     cmpd_name_input.send_keys(cmpd_name)
-    
+
     #find the 'search Name' and click it 
     search_cmpd_btn = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[1]/input[2]')
     search_cmpd_btn.click()
@@ -61,8 +62,11 @@ def find_txt(string_to_find, src):
 
 def get_cameo(compounds: List[Chemical]):
     driver = __get_driver()
-    driver.get('https://cameochemicals.noaa.gov/search/simple')
-    
+    try:
+        driver.get('https://cameochemicals.noaa.gov/search/simple')
+    except:
+        raise ScraperError('Unable to access the CAMEO website, please visit cameochemicals.noaa.gov for chemical compatibility analysis')
+
     # will want to return html element and errors, if any
     html_element = '',
     errors = []

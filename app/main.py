@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from helpers.errors import InputDataError
+from helpers.errors import InputDataError, ScraperError
 from .routers import pdf, results, actions
 
 app = FastAPI()
@@ -19,7 +19,7 @@ app.include_router(results.router)
 app.include_router(actions.router)
 
 @app.get("/")
-async def root():
+async def root():  
     """ Test route to check if server is running. """
     return {
         "message": "I am live!",
@@ -27,5 +27,6 @@ async def root():
 
 @app.exception_handler(AssertionError)
 @app.exception_handler(InputDataError)
+@app.exception_handler(ScraperError)
 def assertions_handler(_, e):
     return PlainTextResponse(str(e), status_code=400)
