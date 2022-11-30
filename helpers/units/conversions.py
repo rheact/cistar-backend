@@ -32,7 +32,7 @@ def std_P(v: float, u: str) -> float:
 
 def unstd_P(v: float, u: str) -> float:
     """
-    Unstandardise temperature from degC to u
+    Unstandardise temperature from bars to u
     """
     if u is None or u == '':
         return v

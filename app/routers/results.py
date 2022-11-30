@@ -5,6 +5,7 @@ from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, Ca
 from services.cameo import get_cameo
 from services.calculation_block import get_final_calculations, get_calculated_cp, get_basis_chemical
 from services.hmatrix import max_h_plot
+from services.heat_of_formation import calculate_heat_of_reaction
 
 router = APIRouter()
 
@@ -72,3 +73,7 @@ def cameo(equation: Equation):
     data = [*equation.reactants, *equation.products, *equation.diluents]
     response = get_cameo(data)
     return response
+
+@router.post('/heatOfFormation')
+def heatOfFormation(casNo: str, phase: str, numberOfMoles: str):
+    return calculate_heat_of_reaction(casNo, phase, numberOfMoles)
