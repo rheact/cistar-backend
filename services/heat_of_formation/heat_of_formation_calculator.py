@@ -1,6 +1,5 @@
 import pandas as pd
 import math
-from models import PACRating
 from helpers.units import conversions
     
 df = pd.read_excel("data/thor_database.xlsx")
