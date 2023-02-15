@@ -1,10 +1,11 @@
 import math
 import helpers.units.conversions as U
 from fastapi import APIRouter
-from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, CameoTable
+from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, CameoTable, PACRating
 from services.cameo import get_cameo
 from services.calculation_block import get_final_calculations, get_calculated_cp, get_basis_chemical
 from services.hmatrix import max_h_plot
+from services.pac import calculate_pac_rating, liquid_vapor_pressure, liquid_density
 from services.heat_of_formation import calculate_heat_of_reaction
 
 router = APIRouter()
@@ -77,3 +78,16 @@ def cameo(equation: Equation):
 @router.post('/heatOfFormation')
 def heatOfFormation(casNo: str, phase: str, numberOfMoles: str):
     return calculate_heat_of_reaction(casNo, phase, numberOfMoles)
+
+@router.post('/pac')
+def pac(casNo: str, AQ: str, typeOfRelease: str, temp: str, tempUnit: str, pressure: str, pressureUnit: str, diameter: str, molecularWeight: str, density: str, liquidHeight: str, boilingPoint: str, heatCapacity: str, HOV: str, vaporPressure: str, vaporPressureUnit: str, dikedArea: str, totalAmount: str):
+    rating = calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pressureUnit, diameter, molecularWeight, density, liquidHeight, boilingPoint, heatCapacity, HOV, vaporPressure, vaporPressureUnit, dikedArea, totalAmount)
+    return round(rating, 3)
+
+@router.post('/vaporPressure')
+def vaporPressure(casNo: str, vaporPressureSDS: str, liquidTemp: str, liquidTempUnit: str):
+    return liquid_vapor_pressure(casNo, vaporPressureSDS, liquidTemp, liquidTempUnit)
+
+@router.post('/liquidDensity')
+def liquidDensity(casNo: str, liquidTemp: str, liquidTempUnit: str):
+    return liquid_density(casNo, liquidTemp, liquidTempUnit)

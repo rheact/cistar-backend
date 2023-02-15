@@ -74,8 +74,18 @@ def get_physical_chemical_properties(text):
         else:
             # attempt to remove units from property
             try:
-                property = re.search(r"-?[\d\.,]+", property).group()
-                property = property.replace(',','')
+                if letter == 'k':
+                    if property != 'No data available':
+                        property = property.split(' ')[2:]
+                        value = property[0].replace(',','')
+                        value = float(value) * 0.1
+                        property[0] = str(round(value, 2))
+                        property[1] = 'kPa' # property[1] is the unit
+                        property = ' '.join(property)
+                        property = property.replace(',','')
+                else:
+                    property = re.search(r"-?[\d\.,]+", property).group()
+                    property = property.replace(',','')
             except:
                 property = 'No data available'
 
