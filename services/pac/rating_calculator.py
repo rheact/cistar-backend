@@ -2,7 +2,6 @@ import pandas as pd
 import re
 import math
 import numbers
-from models import PACRating
 from helpers.errors import InputDataError
 from helpers.units import conversions
     
