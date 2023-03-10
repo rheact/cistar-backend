@@ -29,7 +29,7 @@ def PACToxicityRating(AQ, row, molecularWeight=1):
     print('PAC2 ', PAC2)
     if unit == 'ppm':
         PAC2 = (PAC2 * float(molecularWeight)) / 24.45
-    return 655.1 * math.sqrt(float(AQ) / PAC2)
+    return 655.1 * math.sqrt(float(AQ) / PAC2), PAC2
 
 # Step 2: Calculate Airborne quantity (gas release), AQ_G
 """
@@ -165,7 +165,7 @@ def flashedFraction(casNo, operatingTempDegC, molecularWeight, heatCapacity, HOV
     tempDiff = float(operatingTempDegC) - float(boilingPoint)
     flashedFraction = (float(hc) / float(hov)) * tempDiff if tempDiff >= 0 else 0
     flashedFraction = min(flashedFraction, 1)
-    return flashedFraction
+    return flashedFraction, hc, hov
 
 
 # Step 10: Liquid release rate
@@ -317,15 +317,16 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pre
 
     # Known AQ -> Step 1
     if AQ:
-        return PACToxicityRating(AQ, row, molecularWeight)
+        rating, pac2 = PACToxicityRating(AQ, row, molecularWeight)
+        return rating, pac2, molecularWeight, 'N/A', 'N/A', 'N/A'
 
     tempDegC = conversions.std_T(float(temp), tempUnit) # Convert whatever unit to degC
 
     # Unknown AQ -> Type of Release 'Gas' -> Step 2: Calculate AQ_G -> Step 1
     if typeOfRelease == 'Gas':
         AQ_G = AQGas(pressure, pressureUnit, tempDegC, diameter, molecularWeight)
-
-        return PACToxicityRating(AQ_G, row, molecularWeight)
+        rating, pac2 = PACToxicityRating(AQ_G, row, molecularWeight)
+        return rating, pac2, molecularWeight, 'N/A', 'N/A', 'N/A'
 
     # Unknown AQ -> Type of Release 'Liquid'
     if typeOfRelease == 'Liquid':
@@ -379,13 +380,13 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pre
 
             # Step 3: AQ_L
             AQ_L = AQLiquid(0, AQPool, releaseRate)
-
-            return PACToxicityRating(AQ_L, row, molecularWeight)
+            rating, pac2 = PACToxicityRating(AQ_L, row, molecularWeight)
+            return rating, pac2, molecularWeight, boilingPoint, 'N/A', 'N/A'
         
         else:
 
             # Step 9: Flashed fraction of the liquid
-            flashedFractionLiquid = flashedFraction(casNo, tempDegC, molecularWeight, heatCapacity, HOV, boilingPoint)
+            flashedFractionLiquid, heatCapacity, HOV = flashedFraction(casNo, tempDegC, molecularWeight, heatCapacity, HOV, boilingPoint)
 
             # Step 5: AQ_F
             AQ_F = AQFlash(flashedFractionLiquid, releaseRate)
@@ -409,8 +410,9 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pre
 
                 # Step 3: AQ_L
                 AQ_L = AQLiquid(AQ_F, AQPool, releaseRate)
-
-                return PACToxicityRating(AQ_L, row, molecularWeight)
+                rating, pac2 = PACToxicityRating(AQ_L, row, molecularWeight)
+                return rating, pac2, molecularWeight, boilingPoint, heatCapacity, HOV
 
             else:
-                return PACToxicityRating(AQ_F, row, molecularWeight)
+                rating, pac2 = PACToxicityRating(AQ_F, row, molecularWeight)
+                return rating, pac2, molecularWeight, boilingPoint, heatCapacity, HOV

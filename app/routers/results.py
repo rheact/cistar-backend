@@ -81,8 +81,9 @@ def heatOfFormation(casNo: str, phase: str, numberOfMoles: str):
 
 @router.post('/pac')
 def pac(casNo: str, AQ: str, typeOfRelease: str, temp: str, tempUnit: str, pressure: str, pressureUnit: str, diameter: str, molecularWeight: str, density: str, liquidHeight: str, boilingPoint: str, heatCapacity: str, HOV: str, vaporPressure: str, vaporPressureUnit: str, dikedArea: str, totalAmount: str):
-    rating = calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pressureUnit, diameter, molecularWeight, density, liquidHeight, boilingPoint, heatCapacity, HOV, vaporPressure, vaporPressureUnit, dikedArea, totalAmount)
-    return round(rating, 3)
+    rating, pac2, molecularWeight, boilingPoint, heatCapacity, HOV = calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pressureUnit, diameter, molecularWeight, density, liquidHeight, boilingPoint, heatCapacity, HOV, vaporPressure, vaporPressureUnit, dikedArea, totalAmount)
+    roundedRating = round(rating, 3)
+    return f'Toxity Rating: {roundedRating};PAC-2: {pac2};Molecular weight: {molecularWeight} g/mol;Boiling point: {boilingPoint} ºC;Heat capacity: {heatCapacity} j/kg/ºC;Heat of vaporization: {HOV} j/kg'
 
 @router.post('/vaporPressure')
 def vaporPressure(casNo: str, vaporPressureSDS: str, liquidTemp: str, liquidTempUnit: str):
