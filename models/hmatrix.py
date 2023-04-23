@@ -1,14 +1,14 @@
 from pydantic import BaseModel
 
 class HMatrixColumn(BaseModel):
-    flammability: str
-    reactivity: str
     skinAbsorption: str
     skinContact: str
     eyeContact: str
     respiratory: str
+    ingestion: str
+    sensitizer: str
     carcinogen: str
     reproductiveHazard: str
-    sensitizer: str
-    other: str
-    ingestion: str
+    organToxicity: str
+    flammability: str
+    reactivityOrExplosivity: str

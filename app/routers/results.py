@@ -1,12 +1,13 @@
 import math
 import helpers.units.conversions as U
 from fastapi import APIRouter
-from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, CameoTable
+from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, CameoTable, MOCHMatrix
 from services.cameo import get_cameo
 from services.calculation_block import get_final_calculations, get_calculated_cp, get_basis_chemical
 from services.hmatrix import max_h_plot
 from services.pac import calculate_pac_rating, liquid_vapor_pressure, liquid_density
 from services.heat_of_formation import calculate_heat_of_reaction
+from services.moc import get_moc_hmatrix
 
 router = APIRouter()
 
@@ -92,3 +93,7 @@ def vaporPressure(casNo: str, vaporPressureSDS: str, liquidTemp: str, liquidTemp
 @router.post('/liquidDensity')
 def liquidDensity(casNo: str, liquidTemp: str, liquidTempUnit: str):
     return liquid_density(casNo, liquidTemp, liquidTempUnit)
+
+@router.post('/mocHmatrix', response_model=MOCHMatrix)
+def mocHmatrix(hNumsMap):
+    return get_moc_hmatrix(hNumsMap)

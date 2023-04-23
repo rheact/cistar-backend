@@ -16,7 +16,7 @@ def max_h_plot(h_ids) -> HMatrixColumn:
     # a list of the max h_nums in the plot
     max_h_nums = [0] * NUM_HAZARDS
     
-    df = pd.read_excel("data/h_matrix.xlsx")
+    df = pd.read_excel("data/revised_h_matrix.xlsx")
     for id in h_ids.split(', '):
         # not all h-indecies are in the h_matrix.xlsx file
         if id not in list(df['Index']):
@@ -27,17 +27,17 @@ def max_h_plot(h_ids) -> HMatrixColumn:
         update_h_nums_if_necessary(max_h_nums, nums[2:])
         
     max_h_plot = {
-        'flammability': COLORS[max_h_nums[0]],
-        'reactivity': COLORS[max_h_nums[1]],
-        'skinAbsorption': COLORS[max_h_nums[2]],
-        'skinContact': COLORS[max_h_nums[3]],
-        'eyeContact': COLORS[max_h_nums[4]],
-        'respiratory': COLORS[max_h_nums[5]],
+        'skinAbsorption': COLORS[max_h_nums[0]],
+        'skinContact': COLORS[max_h_nums[1]],
+        'eyeContact': COLORS[max_h_nums[2]],
+        'respiratory': COLORS[max_h_nums[3]],
+        'ingestion': COLORS[max_h_nums[4]],
+        'sensitizer': COLORS[max_h_nums[5]],
         'carcinogen': COLORS[max_h_nums[6]],
         'reproductiveHazard': COLORS[max_h_nums[7]],
-        'sensitizer': COLORS[max_h_nums[8]],
-        'other': COLORS[max_h_nums[9]],
-        'ingestion': COLORS[max_h_nums[10]],
+        'organToxicity': COLORS[max_h_nums[8]],
+        'flammability': COLORS[max_h_nums[9]],
+        'reactivityOrExplosivity': COLORS[max_h_nums[10]],
     }
     return HMatrixColumn(**max_h_plot)
 
