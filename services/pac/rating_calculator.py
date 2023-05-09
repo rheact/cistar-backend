@@ -129,12 +129,14 @@ Parameters:
     - Normal (1 atm) boiling point of liquid, Tb [=] ºC
 """
 def flashedFraction(casNo, operatingTempDegC, molecularWeight, heatCapacity, HOV, boilingPoint):
-    row = get_row(casNo, chemDf)
-    assert row is not None, f'Unable to find CAS number {casNo} in the database. Please enter heat capacity of the liquid manually.'
+    # row = get_row(casNo, chemDf)
+    # assert row is not None, f'Unable to find CAS number {casNo} in the database. Please enter heat capacity of the liquid manually.'
     # Heat Capacity
     hc = heatCapacity
     
     if not hc:
+        row = get_row(casNo, chemDf)
+        assert row is not None, f'Unable to find CAS number {casNo} in the database. Please enter heat capacity of the liquid manually.'
         hcA = row['LiqCp_A'].values[0]
         hcB = row['LiqCp_B'].values[0]
         try:
@@ -203,10 +205,14 @@ def liquid_density(casNo, operatingTemp, operatingTempUnit):
     pacDensity = None
     if pacRow is not None:
         specificGravity = pacRow['Specific Gravity'].values[0]
-        if specificGravity:
-            sg = specificGravity.split('@')[0] # extract the number before '@'
-            sg = re.findall(r'\d+.?\d*', sg)[0]
-            pacDensity = float(sg) * 997
+
+        if specificGravity and ((isinstance(specificGravity, float) and not math.isnan(specificGravity)) or isinstance(specificGravity, str)):
+            state = pacRow['State'].values[0]
+            pacDensity = "According to PAC database Rev 29A, state at 25°C is "+str(state)+", specific gravity at 25°C unless indicated is "+str(specificGravity)
+            # Specific Gravity @25C unless indicated
+            # sg = str(specificGravity).split('@')[0] # extract the number before '@'
+            # sg = re.findall(r'\d+.?\d*', sg)[0]
+            # pacDensity = float(sg) * 997
     
     # Calculate density using the formula in chem_data
     chemDensity = None
@@ -232,17 +238,23 @@ def liquid_density(casNo, operatingTemp, operatingTempUnit):
             except:
                 chemDensity = None
 
-    density = ''
-    source = ''
-    if pacDensity is not None:
-        density = str(pacDensity)
-        source = "Liquid density from PAC database: "+density+" kg/m3"
-    else:
-        if chemDensity is not None:
-            density = str(chemDesity)
-            source = "Liquid density calculted RAST Chem Table: "+density+" kg/m3"
+    if chemDensity is not None:
+        chemDensity = str(chemDesity)
+        chemDensity = "Liquid density calculted based on RAST Chem Table: "+chemDensity+" kg/m3"     
 
-    return density, source
+    # density = ''
+    # source = ''
+    # if pacDensity is not None:
+    #     density = str(pacDensity)
+    #     source = "Liquid density from PAC database: "+density+" kg/m3"
+    # else:
+    #     if chemDensity is not None:
+    #         density = str(chemDesity)
+    #         source = "Liquid density calculted RAST Chem Table: "+density+" kg/m3"
+    if (pacDensity is not None and chemDensity is not None):
+        return pacDensity, chemDensity
+    
+    return pacDensity or chemDensity
 
 
 def liquid_vapor_pressure(casNo, vaporTemplateSDS, operatingTemp, operatingTempUnit):
@@ -367,7 +379,7 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pre
             totalMass = totalMassPool(liquidReleased, 0)
 
             # Step 6: Pool area
-            poolArea = dikedArea if dikedArea else liquidPoolArea(totalMass, density)
+            poolArea = dikedArea if dikedArea else liquidPoolArea(totalMass, float(liquidDensity))
 
             # Step 4: AQ_P
             # Convert vapor pressure to bars
