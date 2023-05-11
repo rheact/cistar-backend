@@ -27,7 +27,8 @@ def get_explosion_limits(text):
 def get_physical_chemical_properties(text):
     #idx = ['Appearance','Odour','Odour Threshold','pH','Melting point','Initial boiling point','Flash point','Evaporation rate','Flammability','Explosive limits','Vapour pressure','Vapour density','Relative density','Water solubility','Partition coefficient','Auto-ignition temperature','Decomposition temperature','Viscosity','Explosive properties','Oxidizing properties']
     # Section 9 - Physical and Chemical Properties
-    phys_chem = re.search(r"PHYSICAL AND.+9\.2", text, re.DOTALL|re.IGNORECASE).group() 
+    phys_chem = re.search(r"PHYSICAL AND.+9\.2", text, re.DOTALL|re.IGNORECASE).group()
+    
     letters = ['d', 'f', 'g', 'k', 'l', 'm', 'p', 'q', 'r']
     idx = ['pH ',
         'Initial boiling point and boiling range ',
@@ -53,6 +54,8 @@ def get_physical_chemical_properties(text):
 
         property = re.search(regex, phys_chem, re.DOTALL).group()
 
+        print('p ', property)
+
         # all of these start with [a])\n \n - 5 chars
         property = property[5:]
 
@@ -75,7 +78,9 @@ def get_physical_chemical_properties(text):
             # attempt to remove units from property
             try:
                 if letter == 'k':
+                    # letter 'k' corresponds to the vapor pressure property
                     if property != 'No data available':
+                        # convert the unit from 'hPa' to 'kPa'
                         property = property.split(' ')[2:]
                         value = property[0].replace(',','')
                         value = float(value) * 0.1

@@ -23,10 +23,8 @@ def get_row(casNo, df):
 def PACToxicityRating(AQ, row, molecularWeight=1):
     PAC2 = float(row['PAC-2'].values[0])
     # Convert ppm to mg/m3
-    # (X ppm)(molecular weight)/ 24.45
+    # (X ppm)*(molecular weight)/ 24.45
     unit = row['Units'].values[0]
-    print('AQ ', AQ)
-    print('PAC2 ', PAC2)
     if unit == 'ppm':
         PAC2 = (PAC2 * float(molecularWeight)) / 24.45
     return 655.1 * math.sqrt(float(AQ) / PAC2), PAC2
@@ -129,12 +127,10 @@ Parameters:
     - Normal (1 atm) boiling point of liquid, Tb [=] ºC
 """
 def flashedFraction(casNo, operatingTempDegC, molecularWeight, heatCapacity, HOV, boilingPoint):
-    # row = get_row(casNo, chemDf)
-    # assert row is not None, f'Unable to find CAS number {casNo} in the database. Please enter heat capacity of the liquid manually.'
-    # Heat Capacity
     hc = heatCapacity
     
     if not hc:
+        # Try to calculate the heat capacity using the formula in chem_data
         row = get_row(casNo, chemDf)
         assert row is not None, f'Unable to find CAS number {casNo} in the database. Please enter heat capacity of the liquid manually.'
         hcA = row['LiqCp_A'].values[0]
@@ -209,10 +205,6 @@ def liquid_density(casNo, operatingTemp, operatingTempUnit):
         if specificGravity and ((isinstance(specificGravity, float) and not math.isnan(specificGravity)) or isinstance(specificGravity, str)):
             state = pacRow['State'].values[0]
             pacDensity = "According to PAC database Rev 29A, state at 25°C is "+str(state)+", specific gravity at 25°C unless indicated is "+str(specificGravity)
-            # Specific Gravity @25C unless indicated
-            # sg = str(specificGravity).split('@')[0] # extract the number before '@'
-            # sg = re.findall(r'\d+.?\d*', sg)[0]
-            # pacDensity = float(sg) * 997
     
     # Calculate density using the formula in chem_data
     chemDensity = None
@@ -242,15 +234,6 @@ def liquid_density(casNo, operatingTemp, operatingTempUnit):
         chemDensity = str(chemDesity)
         chemDensity = "Liquid density calculted based on RAST Chem Table: "+chemDensity+" kg/m3"     
 
-    # density = ''
-    # source = ''
-    # if pacDensity is not None:
-    #     density = str(pacDensity)
-    #     source = "Liquid density from PAC database: "+density+" kg/m3"
-    # else:
-    #     if chemDensity is not None:
-    #         density = str(chemDesity)
-    #         source = "Liquid density calculted RAST Chem Table: "+density+" kg/m3"
     if (pacDensity is not None and chemDensity is not None):
         return pacDensity, chemDensity
     
@@ -258,6 +241,8 @@ def liquid_density(casNo, operatingTemp, operatingTempUnit):
 
 
 def liquid_vapor_pressure(casNo, vaporTemplateSDS, operatingTemp, operatingTempUnit):
+
+    # First try to get the liquid vapor pressure from the PAC database
     row = get_row(casNo, pacDf)
     assert row is not None, f'No record in the database.'
     
@@ -276,7 +261,7 @@ def liquid_vapor_pressure(casNo, vaporTemplateSDS, operatingTemp, operatingTempU
         vaporPressureTemp = math.nan
 
     if math.isnan(vaporPressure) or math.isnan(vaporPressureTemp):
-        # Calculate from chem_data.xlsx
+        # If PAC doesn't have it, then calculate from chem_data.xlsx
         row = get_row(casNo, chemDf)
         assert row is not None and operatingTemp, 'No record in the database.'
         
@@ -315,7 +300,7 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pre
     row = get_row(casNo, pacDf)
     assert row is not None, f'Unable to find CAS number {casNo} in the database.'
     
-    # Try to get molecular weight from PAC. If not available, use molecular weight from SDS or user provided.
+    # Try to get molecular weight from PAC. If not available, use molecular weight from SDS or user provides it.
     molecularWeight = row['Molecular Weight'].values[0]
     try:
         molecularWeight = float(molecularWeight)
@@ -354,19 +339,19 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pre
             # Step 8: Total liquid released
             liquidReleased = totalLiquidReleased(releaseRate)
 
-        # Boiling Point
-        # check PAC
+        # To get boiling point
+        # first check PAC
         boilingPoint = None
         bpPAC = row['Boiling Point'].values[0]
             
         if (isinstance(bpPAC, numbers.Number) and math.isnan(bpPAC)) or (isinstance(bpPAC, str) and bpPAC.includes('@')):
-            # check SDS
+            # if PAC database doesn't have boiling point, then check SDS or user provides it
             boilingPoint = userBoilingPoint
         else:
             # range
             bps = re.findall(r'(-?\d+.?\d*)-(-?\d+.?\d*)', str(bpPAC))
             if len(bps) == 2:
-                boilingPoint = bps[1] # use the bigger value
+                boilingPoint = bps[1] # use the bigger value in the range
             else:
                 # single value
                 boilingPoint = re.findall(r'-?\d+.?\d*', str(bpPAC))[0]

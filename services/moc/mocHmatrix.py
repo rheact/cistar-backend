@@ -28,18 +28,15 @@ HAZARDS = {
 NUM_HAZARDS = 11
 
 def get_moc_hmatrix(hNumsMap) -> MOCHMatrix:
-    # a list of the max h_nums in the plot
+    # a list of hazard level colors for each hazard
     total = [[] for i in range(NUM_HAZARDS)]
     results = {
         'level1': [],
         'level2': [],
         'level3': []
     }
-    print(total)
     
     df = pd.read_excel("data/revised_h_matrix.xlsx")
-
-    print(hNumsMap)
 
     hNumsMap = json.loads(hNumsMap)
 
@@ -60,8 +57,6 @@ def get_moc_hmatrix(hNumsMap) -> MOCHMatrix:
         print(total)
 
     for i in range(NUM_HAZARDS):
-        if i == 9:
-            continue
         if 'R' in total[i]:
             # red color
             results['level3'].append(HAZARDS[i])
@@ -69,11 +64,12 @@ def get_moc_hmatrix(hNumsMap) -> MOCHMatrix:
             # orange color
             results['level2'].append(HAZARDS[i])
         elif 'Y' in total[i] or 'G' in total[i]:
+            # yellow or green color
             results['level1'].append(HAZARDS[i])
     
     return MOCHMatrix(**results)
 
-# given a row in the hmatrix, if any of the indicators are greater than what's currently in the 
+# given a list of h_numbers, if any of the indicators are greater than what's currently in the 
 # max_h_nums, this function will update the max plot to reflect the max indicator.
 
 # For example:
