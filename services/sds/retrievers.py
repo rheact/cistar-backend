@@ -54,7 +54,7 @@ def get_physical_chemical_properties(text):
 
         property = re.search(regex, phys_chem, re.DOTALL).group()
 
-        print('p ', property)
+        # print('p ', property)
 
         # all of these start with [a])\n \n - 5 chars
         property = property[5:]

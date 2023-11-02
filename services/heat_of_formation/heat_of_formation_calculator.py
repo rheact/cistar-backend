@@ -1,10 +1,10 @@
 import pandas as pd
 import math
+from decimal import *
 from helpers.units import conversions
     
-main_df = pd.read_excel("data/thor_database.xlsx")
-hof_df = pd.read_excel("data/thor_hof_database.xlsx")
-hov_df = pd.read_excel("data/thor_hov_database.xlsx")
+main_df = pd.read_excel("data/CRC_Pedley_Combined_Updated.xlsx")
+nbs_df = pd.read_excel("data/nbs_updated.xlsx")
 
 def get_row(casNo, df):
     """
@@ -18,53 +18,61 @@ def get_row(casNo, df):
 
 def calculate_heat_of_reaction(casNo: str, phase: str, numberOfMoles: str):
     row = get_row(casNo, main_df)
-    assert row is not None, f'Unable to calculate heat of formation for chemical {casNo}, please enter the value manually.'
+    nbs_row = get_row(casNo, nbs_df)
 
-    heatOfFormation = row[phase.lower()].values[0]
+    assert row is not None or nbs_row is not None, f'Unable to calculate heat of formation for chemical {casNo}, please enter the value manually.'
+     
+    heatOfFormation = None
+    if row is not None:
+        heatOfFormation = row['CRC Heat of Formation ' + phase].values[0]
+        heatOfFusion = row['CRC Heat of Fusion'].values[0]
+        heatOfVaporization = row['CRC Heat of Vaporization'].values[0]
 
-    if math.isnan(heatOfFormation):
+        hSolid = row['CRC Heat of Formation Solid'].values[0]
+        hLiquid = row['CRC Heat of Formation Liquid'].values[0]
+        hGas = row['CRC Heat of Formation Gas'].values[0]
+
+        pedleyLiquid = row['Pedley Heat of Formation Liquid'].values[0]
+        pedleyGas = row['Pedley Heat of Formation Gas'].values[0]
+
+        if math.isnan(heatOfFormation):
+            if phase == 'Solid':
+                if not math.isnan(hLiquid) and not math.isnan(heatOfFusion):
+                    heatOfFormation = hLiquid - heatOfFusion
+
+                elif not math.isnan(hGas) and not math.isnan(heatOfFusion) and not math.isnan(heatOfVaporization):
+                    heatOfFormation = hGas - heatOfFusion - heatOfVaporization
+
+            elif phase == 'Liquid':
+                if not math.isnan(hSolid) and not math.isnan(heatOfFusion):
+                    heatOfFormation = hSolid + heatOfFusion
+
+                elif not math.isnan(hGas) and not math.isnan(heatOfVaporization):
+                    heatOfFormation = hGas - heatOfVaporization
+
+                if math.isnan(heatOfFormation) and not math.isnan(pedleyLiquid):
+                    heatOfFormation = pedleyLiquid
+
+            else:
+                # phase == 'Gas'
+                if not math.isnan(hLiquid) and not math.isnan(heatOfVaporization):
+                    heatOfFormation = hLiquid + heatOfVaporization
+
+                elif not math.isnan(hSolid) and not math.isnan(heatOfFusion) and not math.isnan(heatOfVaporization):
+                    heatOfFormation = hSolid + heatOfFusion + heatOfVaporization
+                
+                if math.isnan(heatOfFormation) and not math.isnan(pedleyGas):
+                    heatOfFormation = pedleyGas
+
+    if (heatOfFormation is None or math.isnan(heatOfFormation)) and nbs_row is not None:
         if phase == 'Solid':
-            hLiquid = row['liquid'].values[0]
-            hGas = row['gas'].values[0]
-            hofRow = get_row(casNo, hof_df)
-            hovRow = get_row(casNo, hov_df)
-            if not math.isnan(hLiquid):
-                if hofRow is not None:
-                    hFus = hofRow['Heat of Fusion'].values[0]
-                    heatOfFormation = hLiquid - hFus
-            elif not math.isnan(hGas):
-                hFus = hofRow['Heat of Fusion'].values[0] if hofRow is not None else None
-                hVap = hovRow['Heat of Vaporization'].values[0] if hovRow is not None else None
-                if hFus is not None and hVap is not None:
-                    heatOfFormation = hGas - hFus - hVap
+            heatOfFormation = nbs_row['Crystalline solid (cr)'].values[0]
         elif phase == 'Liquid':
-            hSolid = row['solid'].values[0]
-            hGas = row['gas'].values[0]
-            hofRow = get_row(casNo, hof_df)
-            hovRow = get_row(casNo, hov_df)
-            if not math.isnan(hSolid):
-                if hofRow is not None:
-                    hFus = hofRow['Heat of Fusion'].values[0]
-                    heatOfFormation = hSolid + hFus
-            elif not math.isnan(hGas):
-                if hovRow is not None:
-                    hVap = hovRow['Heat of Vaporization'].values[0]
-                    heatOfFormation = hGas - hVap
+            heatOfFormation = nbs_row['Liquid (l)'].values[0]
         else:
-            hSolid = row['solid'].values[0]
-            hLiquid = row['gas'].values[0]
-            hofRow = get_row(casNo, hof_df)
-            hovRow = get_row(casNo, hov_df)
-            if not math.isnan(hLiquid):
-                if hovRow is not None:
-                    hVap = hovRow['Heat of Vaporization'].values[0]
-                    heatOfFormation = hLiquid + hVap
-            elif not math.isnan(hSolid):
-                hFus = hofRow['Heat of Fusion'].values[0] if hofRow is not None else None
-                hVap = hovRow['Heat of Vaporization'].values[0] if hovRow is not None else None
-                if hFus is not None and hVap is not None:
-                    heatOfFormation = hSolid + hFus + hVap
+            # phase == 'Gas'
+            heatOfFormation = nbs_row['Gas (g)'].values[0]
 
     assert not math.isnan(heatOfFormation), f'Unable to calculate heat of formation for chemical {casNo} in {phase} phase, please enter the value manually.'
     
-    return float(numberOfMoles) * heatOfFormation
+    return round(float(numberOfMoles) * heatOfFormation, 3)
