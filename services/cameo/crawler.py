@@ -68,7 +68,8 @@ def get_cameo(compounds: List[Chemical]):
         raise ScraperError('Unable to access the CAMEO website, please visit cameochemicals.noaa.gov for chemical compatibility analysis')
 
     # will want to return html element and errors, if any
-    html_element = '',
+    html_element = ''
+    details_html = ''
     errors = []
 
     for cmpd in compounds: 
@@ -113,14 +114,32 @@ def get_cameo(compounds: List[Chemical]):
 
         #This is the html element for the table -- printing this out will give all the code 
         html_element = react_table.get_attribute('outerHTML')
+
+        details_arr = driver.find_elements_by_xpath('//*[preceding-sibling::table[@id="compat_chart"] and following-sibling::div[@class="footer"]]')
+        details_html_arr = []
+        for d in details_arr:
+            details_html_arr.append(d.get_attribute('outerHTML'))
+
+        details_html = ''.join(details_html_arr)
+        details_html = re.sub(' href=".*"', '', details_html)
+        details_html = re.sub(
+            '(<table width="100%" summary="for page layout only">|<tbody><tr>|<td align="left"><a>Documentation</a></td>|<td align="right"><a>Back to Chart</a></td>|</tr>|</tbody></table>|<br>)',
+            '', 
+            details_html
+        )
+        details_html = re.sub('h2', 'h3', details_html)
+        details_html = re.sub('(<a>|<em>)', '<span>', details_html)
+        details_html = re.sub('</a>|</em>', '</span>', details_html)
     except: 
         print('Exception No compatiblity matrix formed')
         errors.append('No compatiblity matrix formed')
         html_element = ''
+        details_html = ''
 
     # replace the cameo names with the ones the user uploaded
     for compound in compounds:
         try:
+            details_html = details_html.replace(cameo_names[compound.casNo], compound.productName)
             html_element = html_element.replace(cameo_names[compound['casNo']], compound['productName'])
         except:
             pass
@@ -129,5 +148,6 @@ def get_cameo(compounds: List[Chemical]):
 
     return {
         'html_element': html_element,
+        'details_html': details_html,
         'errors': errors,
     }
