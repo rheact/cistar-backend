@@ -6,16 +6,45 @@ from helpers.units import conversions
 main_df = pd.read_excel("data/CRC_Pedley_Combined_Updated.xlsx")
 nbs_df = pd.read_excel("data/nbs_updated.xlsx")
 
-def get_row(casNo, df):
-    """
-    Sees if the chemical with a given cas exists in the table.
+"""
+    See if the chemical with a given cas exists in the given file (df).
     returns the row if it does otherwise returns None 
-    """
+"""
+def get_row(casNo, df):
     row = df[df['CAS Number'] == casNo]
     if len(row) == 0:
         return None
     return row
 
+"""
+    Calculate the heat of reaction for a chemical with the provided CAS number and in the specified phase, utilizing CRC, Pedley, and NBS databases.
+    (Note: Pedley only includes liquid and gas phases)
+
+    If the chemical is present in the CRC & Pedley database:
+        1. If the heat of formation for the desired phase exists, use the value to calculate the heat of reaction.
+        2. If the desired phase is solid:
+            2.1 If the heat of formation of the chemical in the liquid phase and its heat of fusion exist,
+                calculate the heat of reaction for the solid phase as heat of formation in liquid phase - heat of fusion.
+            2.2 Else if the heat of formation of the chemical in the gas phase, and heat of fusion and vaporization exist,
+                calculate the heat of reaction for the solid phase as heat of formation in gas phase - heat of fusion - heat of vaporization.
+        3. If the desired phase is liquid:
+            3.1 If the heat of formation of the chemical in the solid phase and its heat of fusion exist,
+                calculate the heat of reaction for the liquid phase as heat of formation in solid phase + heat of fusion.
+            3.2 Else if the heat of formation of the chemical in the gas phase, and heat of vaporization exist,
+                calculate the heat of reaction for the liquid phase as heat of formation in gas phase - heat of vaporization.
+            3.3 Else if the heat of reaction for the liquid phase of this chemical exists in the Pedley database,
+                use the value from the Pedley database.
+        4. If the desired phase is gas:
+            4.1 If the heat of formation of the chemical in the liquid phase and its heat of vaporization exist,
+                calculate the heat of formation for the gas phase as heat of formation in liquid phase + heat of vaporization.
+            4.2 Else if the heat of formation of the chemical in the solid phase, and heat of fusion and vaporization exist,
+                calculate the heat of formation for the gas phase as heat of formation in solid phase + heat of fusion + heat of vaporization.
+            4.3 Else if the heat of reaction for the gas phase of this chemical exists in the Pedley database,
+                use the value from the Pedley database.
+
+    If the chemical doesn't exist in the CRC & Pedley database but exists in the NBS database:
+        Try to obtain the heat of formation for the desired phase directly.
+"""
 def calculate_heat_of_reaction(casNo: str, phase: str, numberOfMoles: str):
     row = get_row(casNo, main_df)
     nbs_row = get_row(casNo, nbs_df)

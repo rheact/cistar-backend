@@ -1,6 +1,9 @@
-# s means convert this unit to standard
-# us means convert standard to this unit
+"""
+    A dictionary that defines conversion functions for temperature ('T'), pressure ('P'), enthalpy change ('dH'), and specific heat capacity ('Cp').
 
+    's' denotes conversion from a source unit to a standardized unit.
+    'us' denotes the reverse, conversion from the standardized unit back to the source unit.
+"""
 UNIT_MAP = {
     'T': {
         '°C': {
@@ -8,9 +11,9 @@ UNIT_MAP = {
             'us': lambda v: v,
         },
         '°F': {
-            # f to c
+            # f to degC
             's': lambda v: (v-32)*5/9,
-            # c to f
+            # degC to f
             'us': lambda v: (9*v/5)+32,
         },
         'K': {

@@ -6,9 +6,11 @@ import re
 from models.rheact_state import Chemical
 from helpers.errors import ScraperError
 
-# sometimes the name of a compound cameo finds is different than the name the user inputs
-# so this data structure will hold
-# cas_id : name pairs so we can look up the proper name later and replace it.
+"""
+    Sometimes the name of a compound cameo finds is different than the name the user inputs
+    so this data structure will hold entries:
+        cas_id : name pairs so we can look up the proper name later and replace it.
+"""
 cameo_names = {}
 
 def __get_driver():
@@ -22,24 +24,24 @@ def __get_driver():
     return driver
 
 def __search_by_cmpd(cmpd_name, driver):
-    #Find the 'Name (not case sensitive)' using Compound name 
+    # Find the 'Name (not case sensitive)' input field using Compound name 
     cmpd_name_input = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[1]/input[1]')
 
-    #Send compound name keys to the compound name field 
+    # Send compound name keys to the compound name field 
     cmpd_name_input.send_keys(cmpd_name)
 
-    #find the 'search Name' and click it 
+    # Find the 'search Name' button and click it 
     search_cmpd_btn = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[1]/input[2]')
     search_cmpd_btn.click()
 
 def __search_by_casid(cas_id, driver):
-    #Find the 'CAS NUMBER dialog box by xpath'
+    # Find the 'CAS NUMBER' dialog box by xpath
     cas_number_input = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[2]/input[1]')
     
-    #Enter cas-id in the 'CAS NUMBER dialog'
+    # Enter cas-id in the 'CAS NUMBER' dialog
     cas_number_input.send_keys(cas_id)
     
-    #find the 'CAS Number (with or without dashes)' button and click it 
+    # Find the 'CAS Number (with or without dashes)' button and click it 
     search_cas_btn = driver.find_element_by_xpath('/html/body/div[2]/div[1]/form[2]/input[2]')
     search_cas_btn.click()
 
@@ -48,18 +50,21 @@ def __new_search_button(driver):
     new_search_btn.click()
 
 def __add_chemical(cas_id, driver):
-    # add the cas_id : name pair to names data structure
+    # Add the cas_id : name pair to names data structure
     name = add_to_chemical_btn = driver.find_element_by_xpath('/html/body/div[2]/div[2]/div[2]/a')
     cameo_names[cas_id] = name.text
 
-    #This is by default the first entry in the search
+    # This is by default the first entry in the search
     add_to_chemical_btn = driver.find_element_by_xpath('/html/body/div[2]/div[2]/div[2]/p/a[2]')
     add_to_chemical_btn.click()
 
-#To search for a string in the page source 
+# To search for a string in the page source 
 def find_txt(string_to_find, src):
     return re.search(r'{}'.format(string_to_find), src)
 
+"""
+    Generate and scrape the chemical compatibility chart from https://cameochemicals.noaa.gov
+"""
 def get_cameo(compounds: List[Chemical]):
     driver = __get_driver()
     try:
@@ -107,14 +112,16 @@ def get_cameo(compounds: List[Chemical]):
         __new_search_button(driver)
 
     try:
+        # Generate the compatibility chart
         predict_react_btn = driver.find_element_by_xpath('/html/body/div[1]/a[7]')
         predict_react_btn.click()
         
         react_table = driver.find_element_by_xpath('/html/body/div[2]/table')
 
-        #This is the html element for the table -- printing this out will give all the code 
+        # This is the html element for the campatibility table -- printing this out will give all the code 
         html_element = react_table.get_attribute('outerHTML')
 
+        # Details include all other relevant text under the compatibility chart
         details_arr = driver.find_elements_by_xpath('//*[preceding-sibling::table[@id="compat_chart"] and following-sibling::div[@class="footer"]]')
         details_html_arr = []
         for d in details_arr:
@@ -139,7 +146,7 @@ def get_cameo(compounds: List[Chemical]):
     # replace the cameo names with the ones the user uploaded
     for compound in compounds:
         try:
-            details_html = details_html.replace(cameo_names[compound.casNo], compound.productName)
+            details_html = details_html.replace(cameo_names[compound['casNo']], compound['productName'])
             html_element = html_element.replace(cameo_names[compound['casNo']], compound['productName'])
         except:
             pass

@@ -1,8 +1,11 @@
 from helpers.errors import InputDataError
 from models import BaseChemicalIndex, Chemical, Equation
 
+"""
+    Retrieve the Chemical object for which the user intends to use its molecular weight as the current basis for the Heat of Reaction calculation.
+"""
 def get_basis_chemical(eq: Equation, basisIdx: BaseChemicalIndex) -> Chemical:
-    # User wants total reaction mass
+    # User wants to use total reaction mass
     if basisIdx.index == -1:
         return None
 
@@ -22,6 +25,9 @@ def get_basis_chemical(eq: Equation, basisIdx: BaseChemicalIndex) -> Chemical:
     assert basisIdx.index < len(eq.diluents), f'Index out of bound for list {basisIdx.list}: {basisIdx.index}'
     return eq.diluents[basisIdx.index]
 
+"""
+    Retrieve the molecular weight fraction of the chemical that is selected as the basis
+"""
 def get_basis_molWtFraction(base: Chemical) -> float:
     assert base is not None, "Basis is total reaction mass"
 

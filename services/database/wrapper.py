@@ -8,23 +8,24 @@ from helpers.errors import InputDataError
     
 df = pd.read_excel("data/chem_table.xlsx")
 
-def get_row(cas):
-    """
+
+"""
     Sees if the chemical with a given cas exists in the table.
     returns the row if it does otherwise returns None 
-    """
+"""
+def get_row(cas):
     row = df[df['CAS Number'] == cas]
     if len(row) == 0:
         return None
     return row
 
-def extract_properties(cas) -> dict:
-    """
-    Extracts boiling_pt, melting_pt, flash_pt, auto_ignition_temp
+"""
+    Extracts boiling_pt, melting_pt, flash_pt, auto_ignition_temp, upper_explosion_limit, lower_explosion_limit
     for the chemical with the given cas
 
     Returns: A dictionary
-    """
+"""
+def extract_properties(cas) -> dict:
     properties = {
         'boilingPt': math.nan,
         'meltingPt': math.nan,
@@ -46,14 +47,15 @@ def extract_properties(cas) -> dict:
     properties['lowerExplosionLim'] = row['UFL (vol %)']
     return properties
 
-def estimate_cp_from_database(cas: str, celcius_T: str) -> Union[float, str]:
-    """
+"""
     Estimates the cp for the chemical with the given cas
     at the given temperature (in degrees celsius)
     Returns the estimate cp as a number
     If the CAS does not exist in the table it will return the empty string
     (because the user must input the cp later)
-    """
+"""
+def estimate_cp_from_database(cas: str, celcius_T: str) -> Union[float, str]:
+
     # T will be a string, convert to int
     celcius_T = float(celcius_T)
     if math.isnan(celcius_T) is True:

@@ -24,11 +24,23 @@ HAZARDS = {
     10: 'reactivity or explosivity'
 }
 
-# number of "hazards" for each h-index
+# Number of "hazards" for each h-index
 NUM_HAZARDS = 11
 
+"""
+    Generate levels of review based on the hazard matrix of user-uploaded chemicals.
+
+    Input:
+        hNumsMap is a map with entries: chemical index -> a list of h-indices
+
+    Example:
+        hNumsMap = {
+            "0": "H226, H332, H312, H315, H319",
+            "1": "H361, H336, H373, H304, H401, H412"
+        }
+"""
 def get_moc_hmatrix(hNumsMap) -> MOCHMatrix:
-    # a list of hazard level colors for each hazard
+    # A list of hazard level colors for each hazard
     total = [[] for i in range(NUM_HAZARDS)]
     results = {
         'level1': [],
@@ -43,7 +55,7 @@ def get_moc_hmatrix(hNumsMap) -> MOCHMatrix:
     for hNums in hNumsMap.values():
         max_h_nums_single_chem = [0] * NUM_HAZARDS
         for id in hNums.split(', '):
-            # not all h-indecies are in the h_matrix.xlsx file
+            # Not all h-indecies are in the h_matrix.xlsx file
             if id not in list(df['Index']):
                 continue
 
@@ -51,11 +63,13 @@ def get_moc_hmatrix(hNumsMap) -> MOCHMatrix:
             nums = list(row.iloc[0])
             update_h_nums_if_necessary(max_h_nums_single_chem, nums[2:])
         
+        # Map each hazard to a color
         for i in range(NUM_HAZARDS):
             total[i].append(COLORS[max_h_nums_single_chem[i]])
         
         print(total)
 
+    # Determine the level of review a hazard belongs to based on its corresponding color
     for i in range(NUM_HAZARDS):
         if 'R' in total[i]:
             # red color
@@ -69,13 +83,15 @@ def get_moc_hmatrix(hNumsMap) -> MOCHMatrix:
     
     return MOCHMatrix(**results)
 
-# given a list of h_numbers, if any of the indicators are greater than what's currently in the 
-# max_h_nums, this function will update the max plot to reflect the max indicator.
+"""
+    Given a row in the hmatrix, if any of the indicators are greater than what's currently in the 
+    max_h_nums, this function will update the max plot to reflect the max indicator.
 
-# For example:
-# given max_h_nums = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3]
-# and numbers [1, 0, 2, 0, 0, 2, 2, 2, 2, 2, 1],
-# max_h_nums will update to [1, 1, 2, 0, 0, 2, 2, 2, 2, 2, 3]
+    For example:
+        given max_h_nums = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3]
+        and numbers [1, 0, 2, 0, 0, 2, 2, 2, 2, 2, 1],
+        max_h_nums will update to [1, 1, 2, 0, 0, 2, 2, 2, 2, 2, 3]
+"""
 def update_h_nums_if_necessary(h_nums, nums):
     for i in range(NUM_HAZARDS):
         if nums[i] > h_nums[i]:

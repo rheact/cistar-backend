@@ -2,11 +2,12 @@ from multiprocessing.sharedctypes import Value
 from helpers.errors import InputDataError
 from models import Equation, Chemical
 
+"""
+    Calculate heap capacity (Cp) of mixture
+    Cp = sum^{components}_{j} X_j * Cp_j
+    X_j: molecular weight fraction of chemical j
+"""
 def get_calculated_cp(equation: Equation, base: Chemical) -> float:
-    """
-    Calculates Cp of mixture
-    Cp = sum^{components}_{j} X_j Cp_j
-    """
     cp_mix = 0
     X_total = 0
 
