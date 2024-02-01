@@ -2,7 +2,7 @@ import math
 import helpers.units.conversions as U
 from fastapi import APIRouter
 from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, CameoTable, MOCHMatrix
-from services.cameo import get_cameo, test2, nbs2
+from services.cameo import get_cameo
 from services.calculation_block import get_final_calculations, get_calculated_cp, get_basis_chemical
 from services.hmatrix import max_h_plot
 from services.pac import calculate_pac_rating, liquid_vapor_pressure, liquid_density
