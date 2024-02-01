@@ -5,11 +5,12 @@ from services.database import estimate_cp_from_database
 
 router = APIRouter()
 
+"""
+    Calculate Cp of the compound.
+"""
 @router.post('/estimate_cp')
 async def estimate_cp(temperature: str, unit: str, cas_no: str):
-    """
-    Temperature is required to caluclate Cp of the compound.
-    """
+
     if unit is None:
         raise InputDataError("No unit passed for temperature")
 

@@ -10,7 +10,7 @@ from .basis import get_basis_molWtFraction
     Inputs:
         - T in degC
         - P in bar
-        - Delta H in cal/g/
+        - Delta H in cal/g
         - C_p mix in cal/g/degC - calculated by cp.py
 """
 def get_final_calculations(ini_T: float, ini_P: float, dH: float, Cp_mix: float, base: Chemical) -> ReactionCalculation:

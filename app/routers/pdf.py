@@ -7,22 +7,23 @@ from services.sds.parser import parse
 
 router = APIRouter()
 
+"""
+    Extract information from an SDS document.
+    Only Sigma-Aldrich SDS are allowed at the moment.
+"""
 @router.post('/pdf', response_model=Chemical)
 async def file_upload(file: UploadFile = File(...)):
-    """
-    Extracts information from an SDS document.
-    Only Sigma-Aldrich SDS are allowed at the moment.
-    """
+
     if not file.filename.lower().endswith('.pdf'):
         raise InputDataError("Uploaded file is not a PDF")
 
     # Parse pdf file
     properties = parse(await file.read())
 
-    # Retrive CAS no from PDF
+    # Retrive CAS No. from PDF
     cas_no = properties.casNo
 
-    # Parse properties from second database
+    # Parse properties from second database (data/chem_table.xlsx)
     additional_properties = extract_properties(cas_no)
 
     # If a property was not contained in the SDS and retreived with parse(),

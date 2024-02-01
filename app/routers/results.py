@@ -2,7 +2,7 @@ import math
 import helpers.units.conversions as U
 from fastapi import APIRouter
 from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, CameoTable, MOCHMatrix
-from services.cameo import get_cameo
+from services.cameo import get_cameo, test2, nbs2
 from services.calculation_block import get_final_calculations, get_calculated_cp, get_basis_chemical
 from services.hmatrix import max_h_plot
 from services.pac import calculate_pac_rating, liquid_vapor_pressure, liquid_density
@@ -11,6 +11,9 @@ from services.moc import get_moc_hmatrix
 
 router = APIRouter()
 
+"""
+    Calculate adiabatic_temp, final_temp, and adiabatic_pressure of the reaction
+"""
 @router.post('/calculate', response_model=ReactionCalculation)
 def calculate(rstate: RheactState):
     params = rstate.operatingParams
@@ -19,6 +22,7 @@ def calculate(rstate: RheactState):
     assert params.pressure != '', "Pressure is missing"
     assert params.heatOfReaction != '', "Heat of Reaction is missing"
 
+    # If base is None, that mean user wants to use total reaction mass
     base = get_basis_chemical(rstate.compound, rstate.operatingParams.basis)
     baseMw = None
     if base is not None:
@@ -37,7 +41,7 @@ def calculate(rstate: RheactState):
     P = U.std_P(P, params.pressureUnit)
     dH = U.std_dH(dH, params.heatOfReactionUnit, baseMw)
 
-    # If user has not provided Cp mix, then we calculate based on mol fractions and individual Cps
+    # If user has not provided Cp mix, then we calculate it based on mol fractions and individual Cps
     Cp = math.nan
     if params.cp == '' or params.cp == None:
         Cp = get_calculated_cp(rstate.compound, base)
@@ -66,6 +70,9 @@ def calculate(rstate: RheactState):
 
     return res
 
+"""
+    Generate one row for the hazard matrix based on the given list of h-indices
+"""
 @router.post('/graph', response_model=HMatrixColumn)
 def matrix(hnums: str):
     return max_h_plot(hnums)

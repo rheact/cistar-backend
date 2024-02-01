@@ -11,12 +11,13 @@ section9 = re.compile(
     r"\n?\s*SECTION\s*9:\s*Physical\s*and\s*chemical\s*properties\s*\n"
 )
 
+"""
+    Gets page numbers of pages Section 8.2 -> Section 9
+        - Start page is the page with heading "8.2 Exposure Controls"
+        - End page is the page with heading "SECTION 9: Physical and chemical properties"
+"""
 def get_ppe_page_nos(pagetexts: List[str]) -> Optional[Tuple[int, int]]:
-    """
-    Gets page numbers of pages section 8.2 -> section 9
-    - Start page is the page with heading "8.2 Exposure Controls"
-    - End page is the page with heading "SECTION 9: Physical and chemical properties"
-    """
+
     # Approach:
     # This function uses a FSA to judge which state we are in to set start and end
     state = 0
@@ -45,6 +46,9 @@ def get_ppe_page_nos(pagetexts: List[str]) -> Optional[Tuple[int, int]]:
 
     return start, end
 
+"""
+    Generate a list of Base64-encoded PNG images
+"""
 def get_ppe_pages_base64(doc: fitz.Document, pagerange: Tuple[int,int]) -> List[str]:
     pbytes = list()
     for pno in range(pagerange[0], pagerange[1]+1):

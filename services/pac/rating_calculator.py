@@ -9,35 +9,54 @@ pacDf = pd.read_excel("data/pac_database3.xlsx")
 chemDf = pd.read_excel("data/chem_data.xlsx")
 hovDf = pd.read_excel("data/thor_hov_database.xlsx")
 
-def get_row(casNo, df):
-    """
-    Sees if the chemical with a given cas exists in the table.
+"""
+    Checks if the chemical with a given cas exists in the table.
     returns the row if it does otherwise returns None 
-    """
+"""
+def get_row(casNo, df):
     row = df[df['CASRN'] == casNo]
     if len(row) == 0:
         return None
     return row
 
 # Step 1: Calculate PAC Toxicity Rating
-def PACToxicityRating(AQ, row, molecularWeight=1):
-    PAC2 = float(row['PAC-2'].values[0])
-    # Convert ppm to mg/m3
-    # (X ppm)*(molecular weight)/ 24.45
-    unit = row['Units'].values[0]
-    if unit == 'ppm':
-        PAC2 = (PAC2 * float(molecularWeight)) / 24.45
-    return 655.1 * math.sqrt(float(AQ) / PAC2), PAC2
-
-# Step 2: Calculate Airborne quantity (gas release), AQ_G
 """
 Parameters:
-    - Diameter of hole, D [=] mm
-    - Absolute pressure (of the gas being considered), Pa [=] kPa 
-        (Absolute pressure = gauge pressure + atmospheric pressure)
-    - PA = Pg + 101.3 kPa
-    - Molecular weight (of the gas being considered), MW [=] mol/g
-    - Temperature (of the gas being considered), T [=] ºC
+    - Airborne quantity, AQ (kg/s)
+        - Airborne quantity has two sources:
+            - Gas release (AQ_G) (Step 2)
+            - Gas from (pool) evaporation (AQ_P) (Steps 3 through 9)
+    - Corresponding row from the database
+    - Molecular weight (default value is 1)
+
+Outputs:
+    - PAC
+    - PAC-2
+"""
+def PACToxicityRating(AQ, row, molecularWeight=1):
+    PAC2 = float(row['PAC-2'].values[0])
+
+    unit = row['Units'].values[0]
+
+    # Convert PAC-2 from ppm to mg/m3
+    # (X ppm)*(molecular weight)/ 24.45
+    if unit == 'ppm':
+        PAC2 = (PAC2 * float(molecularWeight)) / 24.45
+
+    return 655.1 * math.sqrt(float(AQ) / PAC2), PAC2
+
+# Step 2: Calculate airborne quantity (gas release), AQ_G
+"""
+Parameters:
+    - Diameter of hole (mm) - User Input
+    - Absolute pressure (of the gas being considered) (kPa) - User Input
+        (Absolute pressure (Pa) = gauge pressure (Pg) + atmospheric pressure)
+        Pa = Pg + 101.3 kPa
+    - Molecular weight (of the gas being considered), MW (mol/g)
+    - Temperature (of the gas being considered) (ºC)
+
+Output:
+    - AQ_G (kg/s)
 """
 def AQGas(pressure, pressureUnit, tempDegC, diameter, molecularWeight):
     # Convert temp & pressure to desired units
@@ -59,18 +78,21 @@ def AQGas(pressure, pressureUnit, tempDegC, diameter, molecularWeight):
     calculatedAQ = 4.751*math.pow(10, -6)*(float(diameter)**2)*pressureKPa*math.sqrt(float(molecularWeight) / (float(tempDegC) + 273))
     return calculatedAQ
 
-# Step 3: Total airborne quantity (liquid release) AQ_L
+# Step 3: Calculate total airborne quantity (liquid release) AQ_L
 """
 Parameters:
-    - AQFlash: Airbone quantity from flash, kg/s - Step 5
-    - AQPoolEvaporation: Airbone quantity from pool evaporation, kg/s - Step 4
-    - liquidReleaseRate: liquid release rate, kg/s - Step 10
+    - AQFlash: Airbone quantity from flash (AQ_F) (kg/s) - Step 5
+    - AQPoolEvaporation: Airbone quantity from pool evaporation,(AQ_P) (kg/s) - Step 4
+    - liquidReleaseRate: liquid release rate (kg/s) - Step 10
+
+Output:
+    - Airborne quantity (liquid release) AQ_L (kg/s)
 """
 def AQLiquid(AQFlash, AQPoolEvaporation, liquidReleaseRate):
     AQL = min(liquidReleaseRate, AQFlash + AQPoolEvaporation)
     return AQL
 
-# Step 4: Airborne quantity from pool evaporation, AQ_p
+# Step 4: Calculate airborne quantity from pool evaporation, AQ_p
 """
 Parameters:
     - Pool area, AP [=] m2
@@ -82,38 +104,50 @@ def vaporFromPool(poolArea, molecularWeight, vaporPressurekPa, poolTemp):
     return 9*math.pow(10, -4)*(float(poolArea)**0.95)*(float(molecularWeight)*float(vaporPressurekPa) / (float(poolTemp) + 273))
 
 
-# Step 5: Airborne quantity from flash (if operating T is less than normal boiling point)
+# Step 5: Calculate airborne quantity from flash (if operating temperature is less than normal boiling point)
 """
 Parameters:
-    - flashed fraction of liquid
-    - liquid release rate, kg/s
+    - Flashed fraction of liquid
+    - Liquid release rate (kg/s)
+
+Output:
+    - Airborne quantity from flash, AQ_F (kg/s)
 """
 def AQFlash(liquidFlashedFraction, liquidReleaseRate):
     AQF = liquidReleaseRate if liquidFlashedFraction >= 0.2 else 5*liquidFlashedFraction*liquidReleaseRate
     return AQF
 
-# Step 6: Liquid pool area
+# Step 6: Calcualte liquid pool area
 """
 Parameters:
-    - total mass of liquid entering pool, kg
-    - liquid density: kg/m^3
+    - total mass of liquid entering pool (kg)
+    - liquid density (kg/m^3)
+
+Output:
+    - Liquid pool area (m^2)
 """
 def liquidPoolArea(totalMass, liquidDensity):
     return 100 * (1.0 * totalMass) / liquidDensity
 
-# Step 7: Total mass of liquid entering pool
+# Step 7: Calcualte total mass of liquid entering pool
 """
 Parameters:
-    - Total liquid released, WT [=] kg
-    - Flashed fraction of liquid, Fv [=] unitless
+    - Total liquid released (kg)
+    - Flashed fraction of liquid
+
+Output:
+    - Total mass of liquid entering pool (kg)
 """
 def totalMassPool(liquidReleased, flashedFractionLiquid):
     return liquidReleased * (1 - 5 * flashedFractionLiquid)
 
-# Step 8: Total liquid released
+# Step 8: Calculate total liquid released
 """
 Parameters:
-    - Liquid release rate, L [=] kg/s
+    - Liquid release rate (kg/s)
+
+Output:
+    - Total liquid released (kg)
 """
 def totalLiquidReleased(liquidReleaseRate):
     return 900 * liquidReleaseRate
@@ -121,10 +155,13 @@ def totalLiquidReleased(liquidReleaseRate):
 # Step 9: Flashed fraction of liquid
 """
 Parameters:
-    - Heat capacity of liquid, Cp [=] J/kg/ºC
-    - Heat of vaporization of liquid, Hv [=] J/kg
-    - Operating temperature of liquid, Ts [=] ºC
-    - Normal (1 atm) boiling point of liquid, Tb [=] ºC
+    - Heat capacity of liquid (J/kg/ºC)
+    - Heat of vaporization of liquid (J/kg)
+    - Operating temperature of liquid (ºC)
+    - Normal (1 atm) boiling point of liquid (ºC)
+
+Output:
+    - Flashed fraction of liquid (unitless)
 """
 def flashedFraction(casNo, operatingTempDegC, molecularWeight, heatCapacity, HOV, boilingPoint):
     hc = heatCapacity
@@ -166,13 +203,16 @@ def flashedFraction(casNo, operatingTempDegC, molecularWeight, heatCapacity, HOV
     return flashedFraction, hc, hov
 
 
-# Step 10: Liquid release rate
+# Step 10: Calcualte liquid release rate
 """
 Parameters:
-    - Gauge pressure (in volume where liquid is stored), Pg [=] kPa
-    - Liquid density, p [=] kg/m3
-    - Height of liquid above release point, ∆h [=] m
-    - Diameter of hole liquid is releasing through, D [=] mm
+    - Gauge pressure (in volume where liquid is stored) (kPa)
+    - Liquid density (kg/m3)
+    - Height of liquid above release point (m)
+    - Diameter of hole liquid is releasing through (mm)
+
+Output:
+    - Liquid release rate (kg/s)
 """
 def liquidReleaseRate(pressure, pressureUnit, density, liquidHeight, diameter):
     # Convert pressure to desired units
@@ -188,14 +228,19 @@ def liquidReleaseRate(pressure, pressureUnit, density, liquidHeight, diameter):
     pressureBar = conversions.std_P(float(pressure), pressureUnit) # Convert whatever unit to bars
     pressureKPa = conversions.unstd_P(pressureBar, 'kPa') # Convert bars to kPa
 
+    # If user provides absolute pressure, then needs to convert it to gauge pressure
+    # Absolute pressure (Pa) = gauge pressure (Pg) + atmospheric pressure
     if absPressure:
-        pressureKPa = pressureKPa - 101.3 # the formula requires gauge pressure
+        pressureKPa = pressureKPa - 101.3 
     
     liquidReleaseRate = 9.44*math.pow(10, -7)*(float(diameter)**2)*density*math.sqrt((1000 * float(pressureKPa)) / (density) + 9.8 * float(liquidHeight))
     return liquidReleaseRate
 
-
+"""
+    Fetch liquid density from both PAC and CHEM databases
+"""
 def liquid_density(casNo, operatingTemp, operatingTempUnit):
+    # Calculate density using specific gravity from PAC database
     pacRow = get_row(casNo, pacDf)
 
     pacDensity = None
@@ -231,7 +276,7 @@ def liquid_density(casNo, operatingTemp, operatingTempUnit):
                 chemDensity = None
 
     if chemDensity is not None:
-        chemDensity = str(chemDesity)
+        chemDensity = str(chemDensity)
         chemDensity = "Liquid density calculted based on RAST Chem Table: "+chemDensity+" kg/m3"     
 
     if (pacDensity is not None and chemDensity is not None):
@@ -239,7 +284,9 @@ def liquid_density(casNo, operatingTemp, operatingTempUnit):
     
     return pacDensity or chemDensity
 
-
+"""
+    Fetch liquid vapor pressure from PAC or CHEM database
+"""
 def liquid_vapor_pressure(casNo, vaporTemplateSDS, operatingTemp, operatingTempUnit):
 
     # First try to get the liquid vapor pressure from the PAC database
@@ -261,7 +308,7 @@ def liquid_vapor_pressure(casNo, vaporTemplateSDS, operatingTemp, operatingTempU
         vaporPressureTemp = math.nan
 
     if math.isnan(vaporPressure) or math.isnan(vaporPressureTemp):
-        # If PAC doesn't have it, then calculate from chem_data.xlsx
+        # If PAC doesn't have it, then calculate using the formula in chem_data.xlsx
         row = get_row(casNo, chemDf)
         assert row is not None and operatingTemp, 'No record in the database.'
         
@@ -295,12 +342,38 @@ def liquid_vapor_pressure(casNo, vaporTemplateSDS, operatingTemp, operatingTempU
     
     return vaporTemplate
 
+"""
+Parameters:
+    - CAS number
+    - Airborne quantity
+    - Type of release
+    - Operating temperature
+    - Operating pressure
+    - Diameter of hole liquid is releasing through
+    - Molecular weight
+    - Liquid density
+    - Height of liquid above release point
+    - Boiling point
+    - Heat capacity
+    - Heat of vaporization
+    - Vapor pressure
+    - Diked area
+    - Total amount of liquid in the container
 
+Outputs:
+    - PAC toxity rating
+    - PAC-2
+    - Molecular weight (g/mol)
+    - Boiling point (ºC) 
+    - Heat capacity (j/kg/ºC)
+    - Heat of vaporization (j/kg)
+"""
 def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pressureUnit, diameter, MW, liquidDensity, liquidHeight, userBoilingPoint, heatCapacity, HOV, vaporPressure, vaporPressureUnit, dikedArea, totalAmount):
     row = get_row(casNo, pacDf)
     assert row is not None, f'Unable to find CAS number {casNo} in the database.'
     
-    # Try to get molecular weight from PAC. If not available, use molecular weight from SDS or user provides it.
+    # Try to get molecular weight from PAC. If not available, use molecular weight from SDS.
+    # If couldn't get the molecular weight from SDS, then user has to provide it.
     molecularWeight = row['Molecular Weight'].values[0]
     try:
         molecularWeight = float(molecularWeight)
@@ -312,14 +385,14 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pre
 
     assert molecularWeight, f'Unable to find molecular weight for {casNo} in the database. Please enter its molecular weight manually.'
 
-    # Known AQ -> Step 1
+    # Known AQ -> Step 1: Calculate PAC toxicity rating
     if AQ:
         rating, pac2 = PACToxicityRating(AQ, row, molecularWeight)
         return rating, pac2, molecularWeight, 'N/A', 'N/A', 'N/A'
 
     tempDegC = conversions.std_T(float(temp), tempUnit) # Convert whatever unit to degC
 
-    # Unknown AQ -> Type of Release 'Gas' -> Step 2: Calculate AQ_G -> Step 1
+    # Unknown AQ -> Type of Release 'Gas' -> Step 2: Calculate AQ_G -> Step 1: Calculate PAC toxicity rating
     if typeOfRelease == 'Gas':
         AQ_G = AQGas(pressure, pressureUnit, tempDegC, diameter, molecularWeight)
         rating, pac2 = PACToxicityRating(AQ_G, row, molecularWeight)
@@ -329,17 +402,18 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pre
     if typeOfRelease == 'Liquid':
     
         assert liquidDensity, f'Please enter the liquid density.'
-        # Step 10: liquid release rate
+
+        # Step 10: Calcualte liquid release rate
         releaseRate = liquidReleaseRate(pressure, pressureUnit, float(liquidDensity), liquidHeight, diameter)
 
         liquidReleased = None
         if totalAmount:
-            liquidReleased = float(totalAmount) # the release took less than 15mins, so we use total amount of liquid in the container
+            liquidReleased = float(totalAmount) # the release took less than 15 mins, so we use total amount of liquid in the container
         else:
-            # Step 8: Total liquid released
+            # Step 8: Calcualte total liquid released
             liquidReleased = totalLiquidReleased(releaseRate)
 
-        # To get boiling point
+        # Get boiling point
         # first check PAC
         boilingPoint = None
         bpPAC = row['Boiling Point'].values[0]
@@ -348,7 +422,7 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pre
             # if PAC database doesn't have boiling point, then check SDS or user provides it
             boilingPoint = userBoilingPoint
         else:
-            # range
+            # deal with range
             bps = re.findall(r'(-?\d+.?\d*)-(-?\d+.?\d*)', str(bpPAC))
             if len(bps) == 2:
                 boilingPoint = bps[1] # use the bigger value in the range
@@ -358,58 +432,83 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pre
                 
         assert boilingPoint, f'Please enter boiling point of the liquid.'
 
+        # If operating temperature (tempDegC) < normal boiling point: Step 7 -> Step 6 -> Step 4 -> Step 3 -> Step 1
         if tempDegC < float(boilingPoint):
             
-            # Step 7: Total mass
+            # Step 7: Calculate total mass
             totalMass = totalMassPool(liquidReleased, 0)
 
-            # Step 6: Pool area
+            # Step 6: Calculate pool area
+            # If liquid release is into a diked area of sufficient size, the pool size is set equal to the diked area
             poolArea = dikedArea if dikedArea else liquidPoolArea(totalMass, float(liquidDensity))
 
-            # Step 4: AQ_P
+            # Step 4: Calculate airborne quality from pool evaporation (AQ_P)
             # Convert vapor pressure to bars
             vaporPressureBars = conversions.std_P(float(vaporPressure), vaporPressureUnit)
 
             # Convert vapor pressure in bars to kPa
             vaporPressurekPa = conversions.unstd_P(vaporPressureBars, 'kPa')
+
+            # Calcualte characteristic pool temperature (ºC)
+            # If operating temperature (temDegC) > boiling point, then use operating temperature
+            # Otherwise use boiling point
             poolTempDegC = float(boilingPoint) if float(tempDegC) > float(boilingPoint) else tempDegC
+
+            # Airborne quality from pool evaporation (AQ_P)
             AQPool = vaporFromPool(poolArea, molecularWeight, vaporPressurekPa, poolTempDegC)
 
-            # Step 3: AQ_L
+            # Step 3: Calculate total airborne quantity (liquid release) (AQ_L)
             AQ_L = AQLiquid(0, AQPool, releaseRate)
+
+            # Step 1: Calculate PAC toxicity rating
             rating, pac2 = PACToxicityRating(AQ_L, row, molecularWeight)
+
             return rating, pac2, molecularWeight, boilingPoint, 'N/A', 'N/A'
         
         else:
-
-            # Step 9: Flashed fraction of the liquid
+            # Operating temperature (tempDegC) >= normal boiling point: Step 9 -> Step 5 -> Did all liquid flash? -> Yes, Step 1 -> No, Steps 7, 6, 4, 3, 1
+            
+            # Step 9: Calculate flashed fraction of the liquid
             flashedFractionLiquid, heatCapacity, HOV = flashedFraction(casNo, tempDegC, molecularWeight, heatCapacity, HOV, boilingPoint)
 
-            # Step 5: AQ_F
+            # Step 5: Calculate qirborne quantity from flash (AQ_F)
             AQ_F = AQFlash(flashedFractionLiquid, releaseRate)
 
+            # Did all liquid flash?
             if flashedFractionLiquid < 0.02:
                 # Not all liquid flashed
-                # Step 7: Total mass
+
+                # Step 7: Calculate total mass
                 totalMass = totalMassPool(liquidReleased, flashedFractionLiquid)
 
-                # Step 6: Pool area
+                # Step 6: Calculate pool area
                 poolArea = dikedArea if dikedArea else liquidPoolArea(totalMass, float(liquidDensity))
 
-                # Step 4: AQ_P
+                # Step 4: Calculate airborne quality from pool evaporation (AQ_P)
                 # Convert vapor pressure to bars
                 vaporPressureBars = conversions.std_P(float(vaporPressure), vaporPressureUnit)
 
                 # Convert vapor pressure in bars to kPa
                 vaporPressurekPa = conversions.unstd_P(vaporPressureBars, 'kPa')
+
+                # Calcualte characteristic pool temperature (ºC)
+                # If operating temperature (temDegC) > boiling point, then use operating temperature
+                # Otherwise use boiling point
                 poolTempDegC = float(boilingPoint) if float(tempDegC) > float(boilingPoint) else tempDegC
                 AQPool = vaporFromPool(poolArea, molecularWeight, vaporPressurekPa, poolTempDegC)
 
-                # Step 3: AQ_L
+                # Step 3: Calculate total airborne quantity (liquid release) (AQ_L)
                 AQ_L = AQLiquid(AQ_F, AQPool, releaseRate)
+
+                # Step 1: Calculate PAC toxicity rating
                 rating, pac2 = PACToxicityRating(AQ_L, row, molecularWeight)
+
                 return rating, pac2, molecularWeight, boilingPoint, heatCapacity, HOV
 
             else:
+                # All liquid flashed
+
+                # Step 1: Calculate PAC toxicity rating
                 rating, pac2 = PACToxicityRating(AQ_F, row, molecularWeight)
+
                 return rating, pac2, molecularWeight, boilingPoint, heatCapacity, HOV

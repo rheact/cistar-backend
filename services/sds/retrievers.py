@@ -1,17 +1,18 @@
 import re
 
-def get_explosion_limits(text):
-    """
+"""
     Upper/lower explosion limits are an interesting case so I decided to
     separate them from the rest of the physical/chemical properties
-    """
+"""
+def get_explosion_limits(text):
+
     # Section 9 - Physical and Chemical Properties
     phys_chem = re.search(r"PHYSICAL AND.+9\.2", text, re.DOTALL|re.IGNORECASE).group()
     regex = r"j\).+k\)"
     limits = re.search(regex, phys_chem, re.DOTALL).group()
     limits = limits.replace('\n', '')
 
-    # remove extraneous spaces
+    # Remove extraneous spaces
     limits = " ".join(limits.split())
 
     try:
@@ -25,7 +26,7 @@ def get_explosion_limits(text):
     return upper, lower
 
 def get_physical_chemical_properties(text):
-    #idx = ['Appearance','Odour','Odour Threshold','pH','Melting point','Initial boiling point','Flash point','Evaporation rate','Flammability','Explosive limits','Vapour pressure','Vapour density','Relative density','Water solubility','Partition coefficient','Auto-ignition temperature','Decomposition temperature','Viscosity','Explosive properties','Oxidizing properties']
+
     # Section 9 - Physical and Chemical Properties
     phys_chem = re.search(r"PHYSICAL AND.+9\.2", text, re.DOTALL|re.IGNORECASE).group()
     
@@ -53,8 +54,6 @@ def get_physical_chemical_properties(text):
             next_letter = '9.2'
 
         property = re.search(regex, phys_chem, re.DOTALL).group()
-
-        # print('p ', property)
 
         # all of these start with [a])\n \n - 5 chars
         property = property[5:]
@@ -98,11 +97,11 @@ def get_physical_chemical_properties(text):
         
     return properties
 
-def get_h_numbers(text):
-    """
+"""
     Returns an string with all the h-Nums, sepparated by commas
     and a string with all the h-statements, sepparated by newline
-    """
+"""
+def get_h_numbers(text):
     # Section 2 - hazard info
     hazard_info = re.search(r"2\.1.+2\.2\s*GHS",text,re.DOTALL).group() #for h index
     try:
@@ -133,7 +132,10 @@ def get_h_numbers(text):
         return_statements = ''
 
     return return_nums, return_statements
-        
+
+"""
+    Product name
+"""   
 def get_product_name(text):
     # section 1.1 - Product name
     pnm = re.search(r"1\.1.+1\.2\s*Releva", text, re.DOTALL).group()
@@ -148,11 +150,12 @@ def get_product_name(text):
     b = b.replace('Product Number', '')
 
     return b
-    
-def get_CAS_weight(text):
-    """
+
+"""
     CAS # and molecular weight
-    """
+"""
+def get_CAS_weight(text):
+
     # Section 3 - composition/information on ingredients
     cprop = re.search(r"COMPOSITION.+FIRST", text, re.DOTALL|re.IGNORECASE).group() #for maol. wt and CAS number
     cas_num = "UNKOWN"
