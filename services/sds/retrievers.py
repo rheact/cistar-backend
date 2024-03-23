@@ -81,12 +81,27 @@ def get_physical_chemical_properties(text):
                     if property != 'No data available':
                         # convert the unit from 'hPa' to 'kPa'
                         property = property.split(' ')[2:]
-                        value = property[0].replace(',','')
-                        value = float(value) * 0.1
-                        property[0] = str(round(value, 2))
-                        property[1] = 'kPa' # property[1] is the unit
-                        property = ' '.join(property)
-                        property = property.replace(',','')
+                        result = []
+                        for j in range(len(property)):
+                            if property[j] == 'hPa':
+                                # Extract the value before 'hPa'
+                                value = property[j-1]
+                                value = property[0].replace(',', '')
+                                value = float(value) * 0.1
+                                if len(result) > 0:
+                                        result[-1] = ''
+                                        result.append(',')
+                                        result.append(' ')
+                                result.append(str(round(value, 2)))
+                                result.append(' ')
+                                result.append('kPa')
+                                result.append(' ')
+                            elif j == len(property)-1 or (j < len(property)-1 and property[j+1] != 'hPa'):
+                                result.append(property[j])
+                                result.append(' ')
+                            
+                        property = ''.join(result)
+                        print(property)
                 else:
                     property = re.search(r"-?[\d\.,]+", property).group()
                     property = property.replace(',','')

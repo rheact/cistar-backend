@@ -5,7 +5,7 @@ from models import Equation, RheactState, ReactionCalculation, HMatrixColumn, Ca
 from services.cameo import get_cameo
 from services.calculation_block import get_final_calculations, get_calculated_cp, get_basis_chemical
 from services.hmatrix import max_h_plot
-from services.pac import calculate_pac_rating, liquid_vapor_pressure, liquid_density
+from services.pac import calculate_pac_rating, liquid_vapor_pressure, liquid_density, liquidReleaseRate, getPACMolecularWeight, getBoilingPoint, getRASTLiqCp, getHOV
 from services.heat_of_formation import calculate_heat_of_reaction
 from services.moc import get_moc_hmatrix
 
@@ -88,18 +88,38 @@ def heatOfFormation(casNo: str, phase: str, numberOfMoles: str):
     return calculate_heat_of_reaction(casNo, phase, numberOfMoles)
 
 @router.post('/pac')
-def pac(casNo: str, AQ: str, typeOfRelease: str, temp: str, tempUnit: str, pressure: str, pressureUnit: str, diameter: str, molecularWeight: str, density: str, liquidHeight: str, boilingPoint: str, heatCapacity: str, HOV: str, vaporPressure: str, vaporPressureUnit: str, dikedArea: str, totalAmount: str):
-    rating, pac2, molecularWeight, boilingPoint, heatCapacity, HOV = calculate_pac_rating(casNo, AQ, typeOfRelease, temp, tempUnit, pressure, pressureUnit, diameter, molecularWeight, density, liquidHeight, boilingPoint, heatCapacity, HOV, vaporPressure, vaporPressureUnit, dikedArea, totalAmount)
+def pac(casNo: str, AQ: str, typeOfRelease: str, opTemp: str, opTempUnit: str, pressure: str, pressureUnit: str, diameter: str, molecularWeight: str, density: str, liquidHeight: str, boilingPoint: str, heatCapacity: str, HOV: str, vaporPressure: str, vaporPressureUnit: str, dikedArea: str, totalAmount: str):
+    rating = calculate_pac_rating(casNo, AQ, typeOfRelease, opTemp, opTempUnit, pressure, pressureUnit, diameter, molecularWeight, density, liquidHeight, boilingPoint, heatCapacity, HOV, vaporPressure, vaporPressureUnit, dikedArea, totalAmount)
     roundedRating = round(rating, 3)
-    return f'Toxity Rating: {roundedRating};PAC-2: {pac2};Molecular weight: {molecularWeight} g/mol;Boiling point: {boilingPoint} ºC;Heat capacity: {heatCapacity} j/kg/ºC;Heat of vaporization: {HOV} j/kg'
+    return roundedRating
 
 @router.post('/vaporPressure')
-def vaporPressure(casNo: str, vaporPressureSDS: str, liquidTemp: str, liquidTempUnit: str):
-    return liquid_vapor_pressure(casNo, vaporPressureSDS, liquidTemp, liquidTempUnit)
+def vaporPressure(casNo: str, opTemp: str, opTempUnit: str, boilingPoint: str):
+    return liquid_vapor_pressure(casNo, opTemp, opTempUnit, boilingPoint)
 
 @router.post('/liquidDensity')
 def liquidDensity(casNo: str, liquidTemp: str, liquidTempUnit: str):
     return liquid_density(casNo, liquidTemp, liquidTempUnit)
+
+@router.post('/liquidReleaseRate')
+def getLiquidReleaseRate(pressure: str, pressureUnit: str, density: str, liquidHeight: str, diameter: str):
+    return liquidReleaseRate(float(pressure), pressureUnit, float(density), float(liquidHeight), float(diameter))
+
+@router.post('/pacMW')
+def getPACMW(casNo: str):
+    return getPACMolecularWeight(casNo)
+
+@router.post('/boilingPoint')
+def getBP(casNo):
+    return getBoilingPoint(casNo)
+
+@router.post('/liqHeatCapacity')
+def getLiqCp(casNo, opTemp, boilingPoint):
+    return getRASTLiqCp(casNo, opTemp, boilingPoint)
+
+@router.post('/liqHOV')
+def getPACHOV(casNo, molecularWeight, boilingPoint):
+    return getHOV(casNo, molecularWeight, boilingPoint)
 
 @router.post('/mocHmatrix', response_model=MOCHMatrix)
 def mocHmatrix(hNumsMap):
