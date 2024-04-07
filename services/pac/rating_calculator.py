@@ -42,7 +42,7 @@ def PACToxicityRating(AQ, row, molecularWeight=1):
     if unit == 'ppm':
         PAC2 = (PAC2 * float(molecularWeight)) / 24.45
 
-    return 655.1 * math.sqrt(float(AQ) / PAC2)
+    return round(655.1 * math.sqrt(float(AQ) / PAC2))
 
 # Step 2: Calculate airborne quantity (gas release), AQ_G
 """
@@ -163,12 +163,21 @@ Output:
     - Flashed fraction of liquid (unitless)
 """
 def flashedFraction(operatingTempDegC, heatCapacity, HOV, boilingPoint):
+    ratio = 0.005
     if not heatCapacity and HOV:
         heatCapacity = float(HOV) * 0.005
+        ratio = float(heatCapacity) / float(HOV)
     if not HOV and heatCapacity:
         HOV = float(heatCapacity) / 0.005
+        float(heatCapacity) / float(HOV)
+
+    print("operatingTempDegC", operatingTempDegC)
+    print("boilingPoint", boilingPoint)
     tempDiff = float(operatingTempDegC) - float(boilingPoint)
-    flashedFraction = (float(heatCapacity) / float(HOV)) * tempDiff if tempDiff >= 0 else 0
+    print("heatCapacity", heatCapacity)
+    print("HOV", HOV)
+    print("temp diff", tempDiff)
+    flashedFraction = ratio * tempDiff if tempDiff >= 0 else 0
     flashedFraction = min(flashedFraction, 1)
 
     return flashedFraction
@@ -302,14 +311,25 @@ def liquid_vapor_pressure(casNo, operatingTemp, operatingTempUnit, boilingPoint)
             rastVP = conversions.unstd_P(rastVP, 'kPa') # Convert vp in bars to kPa
             rastVPTemp = poolTemp
 
-    return pacVP, pacVPTemp, rastVP, rastVPTemp
+    return pacVP, pacVPTemp, round(rastVP, 1), rastVPTemp
 
 def getPACMolecularWeight(casNo):
     row = get_row(casNo, pacDf)
     if row is None:
         return "Unable to find the chemical in PAC database"
+    
+    PAC2 = float(row['PAC-2'].values[0])
 
-    return row['Molecular Weight'].values[0], row['PAC-2'].values[0]
+    molecularWeight = row['Molecular Weight'].values[0]
+
+    unit = row['Units'].values[0]
+
+    # Convert PAC-2 from ppm to mg/m3
+    # (X ppm)*(molecular weight)/ 24.45
+    # if unit == 'ppm':
+    #     PAC2 = (PAC2 * float(molecularWeight)) / 24.45
+
+    return molecularWeight, PAC2, unit
 
 def getBoilingPoint(casNo):
     rowPAC = get_row(casNo, pacDf)
@@ -330,6 +350,7 @@ def getBoilingPoint(casNo):
 
     if rowRAST is not None:
         bpRAST = rowRAST['Boiling Point (deg C)'].values[0]
+        # bpRAST = round(float(bpRAST), 1)
 
     return bpPAC, bpRAST
 
@@ -357,7 +378,7 @@ def getRASTLiqCp(casNo, opTemp, boilingPoint):
     hc = hcA + hcB * temp
     # Unit conversion
     hc = hc * 4184 # J/kg/C
-    return hc
+    return round(hc)
 
 def getHOV(casNo, molecularWeight, boilingPoint):
     hovRow = get_row(casNo, hovDf)
@@ -366,6 +387,7 @@ def getHOV(casNo, molecularWeight, boilingPoint):
     rastHOV = "Unable to calculate HOV"
     if hovRow is not None:
         hovHOV = hovRow['Heat of Vaporization'].values[0] # unit: kj/mol
+        print("hovHOV", hovHOV)
         hovHOV = 1000000 * (float(hovHOV) / float(molecularWeight))  # Convert kj/mol to j/kg
     if rastRow is not None:
         hovA = rastRow['dHv_A'].values[0]
@@ -376,7 +398,7 @@ def getHOV(casNo, molecularWeight, boilingPoint):
         boilingPoint = float(boilingPoint)
         rastHOV = float(hovA) - float(hovB) * boilingPoint - float(hovC) * boilingPoint * boilingPoint
         rastHOV = 1000000 * (rastHOV / float(molecularWeight))
-    return hovHOV, rastHOV
+    return round(hovHOV, 1), round(rastHOV, 1)
 
 
 """
@@ -475,18 +497,28 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, opTemp, opTempUnit, pressure,
             # Step 9: Calculate flashed fraction of the liquid
             flashedFractionLiquid = flashedFraction(opTempDegC, heatCapacity, HOV, boilingPoint)
 
+            print("flashed fraction liq", flashedFractionLiquid)
+
+            print("liquid released", liquidReleased)
+
             # Step 5: Calculate qirborne quantity from flash (AQ_F)
             AQ_F = AQFlash(flashedFractionLiquid, releaseRate)
 
+            print("AQ_F", AQ_F)
+
             # Did all liquid flash?
-            if flashedFractionLiquid < 0.02:
+            if flashedFractionLiquid < 0.2:
                 # Not all liquid flashed
 
                 # Step 7: Calculate total mass
                 totalMass = totalMassPool(liquidReleased, flashedFractionLiquid)
 
+                print("total mass", totalMass)
+
                 # Step 6: Calculate pool area
                 poolArea = dikedArea if dikedArea else liquidPoolArea(totalMass, float(liquidDensity))
+
+                print("pool area", poolArea)
 
                 # Step 4: Calculate airborne quality from pool evaporation (AQ_P)
                 # Convert vapor pressure to bars
@@ -495,11 +527,15 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, opTemp, opTempUnit, pressure,
                 # Convert vapor pressure in bars to kPa
                 vaporPressurekPa = conversions.unstd_P(vaporPressureBars, 'kPa')
 
+                print("vapor pressure", vaporPressurekPa)
+
                 # Calcualte characteristic pool temperature (ºC)
                 # If operating temperature (temDegC) > boiling point, then use operating temperature
                 # Otherwise use boiling point
                 poolTempDegC = float(boilingPoint) if float(opTempDegC) > float(boilingPoint) else opTempDegC
                 AQPool = vaporFromPool(poolArea, molecularWeight, vaporPressurekPa, poolTempDegC)
+
+                print("AQPool", AQPool)
 
                 if flashedFractionLiquid == 0:
                     AQ_L = AQPool
@@ -507,8 +543,11 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, opTemp, opTempUnit, pressure,
                     # Step 3: Calculate total airborne quantity (liquid release) (AQ_L)
                     AQ_L = AQLiquid(AQ_F, AQPool, releaseRate)
 
+                print("AQ_L", AQ_L)
                 # Step 1: Calculate PAC toxicity rating
                 rating = PACToxicityRating(AQ_L, row, molecularWeight)
+
+                print("rating", rating)
 
                 return rating
             else:
