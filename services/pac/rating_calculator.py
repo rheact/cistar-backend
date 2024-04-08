@@ -164,19 +164,10 @@ Output:
 """
 def flashedFraction(operatingTempDegC, heatCapacity, HOV, boilingPoint):
     ratio = 0.005
-    if not heatCapacity and HOV:
-        heatCapacity = float(HOV) * 0.005
+    if heatCapacity and HOV:
         ratio = float(heatCapacity) / float(HOV)
-    if not HOV and heatCapacity:
-        HOV = float(heatCapacity) / 0.005
-        float(heatCapacity) / float(HOV)
 
-    print("operatingTempDegC", operatingTempDegC)
-    print("boilingPoint", boilingPoint)
     tempDiff = float(operatingTempDegC) - float(boilingPoint)
-    print("heatCapacity", heatCapacity)
-    print("HOV", HOV)
-    print("temp diff", tempDiff)
     flashedFraction = ratio * tempDiff if tempDiff >= 0 else 0
     flashedFraction = min(flashedFraction, 1)
 
@@ -257,7 +248,7 @@ def liquid_density(casNo, operatingTemp, operatingTempUnit):
 
     if chemDensity is not None:
         chemDensity = str(chemDensity)
-        chemDensity = "Liquid density calculted based on RAST Chem Table: "+chemDensity+" kg/m3"     
+        chemDensity = chemDensity+" kg/m3"     
 
     if (pacDensity is not None and chemDensity is not None):
         return pacDensity, chemDensity
@@ -387,7 +378,6 @@ def getHOV(casNo, molecularWeight, boilingPoint):
     rastHOV = "Unable to calculate HOV"
     if hovRow is not None:
         hovHOV = hovRow['Heat of Vaporization'].values[0] # unit: kj/mol
-        print("hovHOV", hovHOV)
         hovHOV = 1000000 * (float(hovHOV) / float(molecularWeight))  # Convert kj/mol to j/kg
     if rastRow is not None:
         hovA = rastRow['dHv_A'].values[0]
@@ -497,14 +487,8 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, opTemp, opTempUnit, pressure,
             # Step 9: Calculate flashed fraction of the liquid
             flashedFractionLiquid = flashedFraction(opTempDegC, heatCapacity, HOV, boilingPoint)
 
-            print("flashed fraction liq", flashedFractionLiquid)
-
-            print("liquid released", liquidReleased)
-
             # Step 5: Calculate qirborne quantity from flash (AQ_F)
             AQ_F = AQFlash(flashedFractionLiquid, releaseRate)
-
-            print("AQ_F", AQ_F)
 
             # Did all liquid flash?
             if flashedFractionLiquid < 0.2:
@@ -513,12 +497,8 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, opTemp, opTempUnit, pressure,
                 # Step 7: Calculate total mass
                 totalMass = totalMassPool(liquidReleased, flashedFractionLiquid)
 
-                print("total mass", totalMass)
-
                 # Step 6: Calculate pool area
                 poolArea = dikedArea if dikedArea else liquidPoolArea(totalMass, float(liquidDensity))
-
-                print("pool area", poolArea)
 
                 # Step 4: Calculate airborne quality from pool evaporation (AQ_P)
                 # Convert vapor pressure to bars
@@ -527,15 +507,11 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, opTemp, opTempUnit, pressure,
                 # Convert vapor pressure in bars to kPa
                 vaporPressurekPa = conversions.unstd_P(vaporPressureBars, 'kPa')
 
-                print("vapor pressure", vaporPressurekPa)
-
                 # Calcualte characteristic pool temperature (ºC)
                 # If operating temperature (temDegC) > boiling point, then use operating temperature
                 # Otherwise use boiling point
                 poolTempDegC = float(boilingPoint) if float(opTempDegC) > float(boilingPoint) else opTempDegC
                 AQPool = vaporFromPool(poolArea, molecularWeight, vaporPressurekPa, poolTempDegC)
-
-                print("AQPool", AQPool)
 
                 if flashedFractionLiquid == 0:
                     AQ_L = AQPool
@@ -543,11 +519,8 @@ def calculate_pac_rating(casNo, AQ, typeOfRelease, opTemp, opTempUnit, pressure,
                     # Step 3: Calculate total airborne quantity (liquid release) (AQ_L)
                     AQ_L = AQLiquid(AQ_F, AQPool, releaseRate)
 
-                print("AQ_L", AQ_L)
                 # Step 1: Calculate PAC toxicity rating
                 rating = PACToxicityRating(AQ_L, row, molecularWeight)
-
-                print("rating", rating)
 
                 return rating
             else:

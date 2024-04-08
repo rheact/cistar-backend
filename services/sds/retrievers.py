@@ -101,7 +101,6 @@ def get_physical_chemical_properties(text):
                                 result.append(' ')
                             
                         property = ''.join(result)
-                        print(property)
                 else:
                     property = re.search(r"-?[\d\.,]+", property).group()
                     property = property.replace(',','')
@@ -126,6 +125,9 @@ def get_h_numbers(text):
         # just get h-statements
         osha_hcs = '(OSHA HCS)'
         hazard_info = hazard_info[hazard_info.find(osha_hcs) + len(osha_hcs):]
+
+        hazard_info = re.sub(r'\n\s\n\s\n.*?US and Canada', '', hazard_info, flags=re.DOTALL)
+
         # remove new lines
         hazard_info = hazard_info.replace('\n', '')
         # remove extraneous spaces
