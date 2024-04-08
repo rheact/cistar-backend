@@ -387,7 +387,8 @@ def getHOV(casNo, molecularWeight, boilingPoint):
             return hovHOV, rastHOV
         boilingPoint = float(boilingPoint)
         rastHOV = float(hovA) - float(hovB) * boilingPoint - float(hovC) * boilingPoint * boilingPoint
-        rastHOV = 1000000 * (rastHOV / float(molecularWeight))
+        rastHOV = rastHOV * 4184
+
     return round(hovHOV, 1), round(rastHOV, 1)
 
 
