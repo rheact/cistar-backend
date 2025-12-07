@@ -24,13 +24,14 @@ def __get_driver():
     return driver
 
 # --- SAFE WAIT AND CLICK ---
-def wait_and_click(driver, xpath, timeout=3, retries=3):
+def wait_and_click(driver, xpath, timeout=3, retries=3, post_click_wait=3):
     for attempt in range(retries):
         try:
             element = WebDriverWait(driver, timeout).until(
                 EC.element_to_be_clickable((By.XPATH, xpath))
             )
             element.click()
+            time.sleep(post_click_wait)
             return
         except StaleElementReferenceException:
             if attempt < retries - 1:
