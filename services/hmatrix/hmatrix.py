@@ -29,7 +29,7 @@ def max_h_plot(h_ids) -> HMatrixColumn:
         nums = list(row.iloc[0])
         update_h_nums_if_necessary(max_h_nums, nums[2:])
         
-    max_h_plot = {
+    plot = {
         'skinAbsorption': COLORS[max_h_nums[0]],
         'skinContact': COLORS[max_h_nums[1]],
         'eyeContact': COLORS[max_h_nums[2]],
@@ -42,7 +42,7 @@ def max_h_plot(h_ids) -> HMatrixColumn:
         'flammability': COLORS[max_h_nums[9]],
         'reactivityOrExplosivity': COLORS[max_h_nums[10]],
     }
-    return HMatrixColumn(**max_h_plot)
+    return HMatrixColumn(**plot)
 
 
 """
